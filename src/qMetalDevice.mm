@@ -71,10 +71,40 @@ namespace qMetal
             return sDevice;
         }
         
-        id<MTLCommandBuffer> CurrentCommandBuffer()
-        {
-            return sCommandBuffer;
-        }
+		id<MTLBlitCommandEncoder> BlitEncoder(NSString *label)
+		{
+			id<MTLBlitCommandEncoder> encoder = [sCommandBuffer blitCommandEncoder];
+			encoder.label = label;
+			return encoder;
+		}
+		
+		id<MTLComputeCommandEncoder> ComputeEncoder(NSString *label)
+		{
+			id<MTLComputeCommandEncoder> encoder = [sCommandBuffer computeCommandEncoder];
+			encoder.label = label;
+			return encoder;
+		}
+		
+		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor *descriptor, NSString *label)
+		{
+			id<MTLRenderCommandEncoder> encoder = [sCommandBuffer renderCommandEncoderWithDescriptor:descriptor];
+			encoder.label = label;
+			return encoder;
+		}
+		
+		void PushDebugGroup(NSString* label)
+		{
+		#if DEBUG
+			[sCommandBuffer pushDebugGroup:label];
+		#endif
+		}
+		
+		void PopDebugGroup()
+		{
+		#if DEBUG
+			[sCommandBuffer popDebugGroup];
+		#endif
+		}
 		
         uint32_t CurrentFrameIndex()
         {

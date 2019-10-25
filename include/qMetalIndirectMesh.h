@@ -229,9 +229,7 @@ namespace qMetal
 		{
 			//TODO could pass blit encoder in to collapse
 			
-			id<MTLBlitCommandEncoder> blitEncoder = [qMetal::Device::CurrentCommandBuffer() blitCommandEncoder];
-			blitEncoder.label = @"Indirect Command Buffer Optimization";
-			
+			id<MTLBlitCommandEncoder> blitEncoder = qMetal::Device::BlitEncoder(@"Indirect Command Buffer Optimization");
 			[blitEncoder optimizeIndirectCommandBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
 			[blitEncoder endEncoding];
 		}

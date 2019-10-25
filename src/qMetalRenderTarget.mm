@@ -178,8 +178,8 @@ namespace qMetal
 	id<MTLRenderCommandEncoder> RenderTarget::Begin()
 	{
 		qASSERTM(mEncoder == nil, "RenderTexture encoder is set; did you forget to call End()?");
-		[qMetal::Device::CurrentCommandBuffer() pushDebugGroup:config->name];
-		mEncoder = [qMetal::Device::CurrentCommandBuffer() renderCommandEncoderWithDescriptor:renderPassDescriptor];
+		qMetal::Device::PushDebugGroup(config->name);
+		mEncoder = qMetal::Device::RenderEncoder(renderPassDescriptor, config->name);
 		//qASSERTM(mEncoder != nil, "RenderTexture encoder didn't get created from renderPassDescriptor?");
 		return mEncoder;
 	}
@@ -188,7 +188,7 @@ namespace qMetal
 	{
 		qASSERTM(mEncoder != nil, "RenderTexture encoder is nil; did you call Begin()?");
 		[mEncoder endEncoding];
-		[qMetal::Device::CurrentCommandBuffer() popDebugGroup];
+		qMetal::Device::PopDebugGroup();
 		mEncoder = nil;
 	}
 }

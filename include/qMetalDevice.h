@@ -36,7 +36,13 @@ namespace qMetal
         void Destroy();
       
         id<MTLDevice> Get();
-        id<MTLCommandBuffer> CurrentCommandBuffer();
+
+		id<MTLBlitCommandEncoder> BlitEncoder(NSString *label);
+		id<MTLComputeCommandEncoder> ComputeEncoder(NSString *label);
+		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor *descriptor, NSString *label);
+		
+		void PushDebugGroup(NSString* name);
+		void PopDebugGroup();
         
         uint32_t CurrentFrameIndex();
 		
