@@ -1,0 +1,552 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5E16F05E1F6EBD6C00E7DEA3 /* qMetalMaterial.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E16F05D1F6EBD6C00E7DEA3 /* qMetalMaterial.h */; };
+		5E16F0621F6EE76B00E7DEA3 /* qMetalStencilState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0611F6EE76B00E7DEA3 /* qMetalStencilState.mm */; };
+		5E16F0641F6EEAAC00E7DEA3 /* qMetalDepthStencilState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0631F6EEAAC00E7DEA3 /* qMetalDepthStencilState.mm */; };
+		5E16F0661F6EEB3A00E7DEA3 /* qMetalCullState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0651F6EEB3A00E7DEA3 /* qMetalCullState.mm */; };
+		5E16F0681F6EF4A300E7DEA3 /* qMetalBlendState.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E16F0671F6EF4A300E7DEA3 /* qMetalBlendState.h */; };
+		5E16F06A1F6EF79A00E7DEA3 /* qMetalBlendState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0691F6EF79A00E7DEA3 /* qMetalBlendState.mm */; };
+		5E2D28DA214D681A004687A7 /* qMetalIndirectMesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */; };
+		5E57D9D41E2BD53F00FED251 /* qMetalStencilState.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E57D9D31E2BD53F00FED251 /* qMetalStencilState.h */; };
+		5E6F8F8A21288A6500D0801B /* qMetalSamplerState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E6F8F8921288A6400D0801B /* qMetalSamplerState.mm */; };
+		5E6F8F8C21288A7500D0801B /* qMetalSamplerState.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E6F8F8B21288A7500D0801B /* qMetalSamplerState.h */; };
+		5E754BF82084673400EB14F4 /* qMetalComputeTexture.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E754BF72084673300EB14F4 /* qMetalComputeTexture.h */; };
+		5E81877D19457C3500F608CD /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E81877C19457C3500F608CD /* Metal.framework */; };
+		5EBE3AC420DFDF1E00A527B1 /* qMetalTexture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5EBE3AC320DFDF1E00A527B1 /* qMetalTexture.mm */; };
+		AA747D9F0F9514B9006C5449 /* qMetal_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* qMetal_Prefix.pch */; };
+		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
+		D28170C11202139E003E56F0 /* qMetalTexture.h in Headers */ = {isa = PBXBuildFile; fileRef = D28170C01202139E003E56F0 /* qMetalTexture.h */; };
+		D2A0F25E1201F2200028AF5F /* qMetalDepthStencilState.h in Headers */ = {isa = PBXBuildFile; fileRef = D2A0F25D1201F2200028AF5F /* qMetalDepthStencilState.h */; };
+		D2C674FF1154941B006113D0 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2C674FD1154941B006113D0 /* QuartzCore.framework */; };
+		D2C675A811549BB6006113D0 /* qMetal.h in Headers */ = {isa = PBXBuildFile; fileRef = D2C675A411549BB6006113D0 /* qMetal.h */; };
+		D2CF896C1243196A0021D571 /* qMetalFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = D2CF896B1243196A0021D571 /* qMetalFunction.h */; };
+		D2CF8970124319720021D571 /* qMetalFunction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2CF896F124319720021D571 /* qMetalFunction.mm */; };
+		D2D28AE013346B4A0062CAB4 /* qMetalCullState.h in Headers */ = {isa = PBXBuildFile; fileRef = D2D28ADF13346B4A0062CAB4 /* qMetalCullState.h */; };
+		D2F4B5E11169B78800BA1269 /* qMetalRenderTarget.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F4B5E01169B78800BA1269 /* qMetalRenderTarget.mm */; };
+		D2F4B5EA1169B79400BA1269 /* qMetalRenderTarget.h in Headers */ = {isa = PBXBuildFile; fileRef = D2F4B5E91169B79400BA1269 /* qMetalRenderTarget.h */; };
+		D2F4B7231169CBCB00BA1269 /* qMetalDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F4B7221169CBCB00BA1269 /* qMetalDevice.mm */; };
+		D2F4B7271169CBF000BA1269 /* qMetalDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = D2F4B7261169CBF000BA1269 /* qMetalDevice.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5E0ABF8823625FBA00FBCDDD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5E0ABF8423625FBA00FBCDDD /* qMath.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC07E0554694100DB518D;
+			remoteInfo = qMath;
+		};
+		D2C6752D115494E2006113D0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2C67529115494E2006113D0 /* qCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC07E0554694100DB518D;
+			remoteInfo = qCore;
+		};
+		D2DD1048128E949C0013AEBB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2C67529115494E2006113D0 /* qCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC07D0554694100DB518D;
+			remoteInfo = qCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		5E0ABF8423625FBA00FBCDDD /* qMath.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = qMath.xcodeproj; path = ../qMath/qMath.xcodeproj; sourceTree = "<group>"; };
+		5E16F05D1F6EBD6C00E7DEA3 /* qMetalMaterial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalMaterial.h; path = include/qMetalMaterial.h; sourceTree = "<group>"; };
+		5E16F0611F6EE76B00E7DEA3 /* qMetalStencilState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalStencilState.mm; path = src/qMetalStencilState.mm; sourceTree = "<group>"; };
+		5E16F0631F6EEAAC00E7DEA3 /* qMetalDepthStencilState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalDepthStencilState.mm; path = src/qMetalDepthStencilState.mm; sourceTree = "<group>"; };
+		5E16F0651F6EEB3A00E7DEA3 /* qMetalCullState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalCullState.mm; path = src/qMetalCullState.mm; sourceTree = "<group>"; };
+		5E16F0671F6EF4A300E7DEA3 /* qMetalBlendState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalBlendState.h; path = include/qMetalBlendState.h; sourceTree = "<group>"; };
+		5E16F0691F6EF79A00E7DEA3 /* qMetalBlendState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalBlendState.mm; path = src/qMetalBlendState.mm; sourceTree = "<group>"; };
+		5E2B356C1F772C6700AC68AF /* qMetalMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = qMetalMesh.h; path = include/qMetalMesh.h; sourceTree = "<group>"; };
+		5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalIndirectMesh.h; path = include/qMetalIndirectMesh.h; sourceTree = "<group>"; };
+		5E57D9D31E2BD53F00FED251 /* qMetalStencilState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalStencilState.h; path = include/qMetalStencilState.h; sourceTree = "<group>"; };
+		5E6F8F8921288A6400D0801B /* qMetalSamplerState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalSamplerState.mm; path = src/qMetalSamplerState.mm; sourceTree = "<group>"; };
+		5E6F8F8B21288A7500D0801B /* qMetalSamplerState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalSamplerState.h; path = include/qMetalSamplerState.h; sourceTree = "<group>"; };
+		5E754BF72084673300EB14F4 /* qMetalComputeTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalComputeTexture.h; path = include/qMetalComputeTexture.h; sourceTree = "<group>"; };
+		5E81877C19457C3500F608CD /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		5EBE3AC320DFDF1E00A527B1 /* qMetalTexture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalTexture.mm; path = src/qMetalTexture.mm; sourceTree = "<group>"; };
+		AA747D9E0F9514B9006C5449 /* qMetal_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = qMetal_Prefix.pch; sourceTree = "<group>"; };
+		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		D28170C01202139E003E56F0 /* qMetalTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = qMetalTexture.h; path = include/qMetalTexture.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2A0F25D1201F2200028AF5F /* qMetalDepthStencilState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalDepthStencilState.h; path = include/qMetalDepthStencilState.h; sourceTree = "<group>"; };
+		D2AAC07E0554694100DB518D /* libqMetal.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqMetal.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2C674FD1154941B006113D0 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		D2C67529115494E2006113D0 /* qCore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = qCore.xcodeproj; path = ../qCore/qCore.xcodeproj; sourceTree = SOURCE_ROOT; };
+		D2C675A411549BB6006113D0 /* qMetal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = qMetal.h; path = include/qMetal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2CF896B1243196A0021D571 /* qMetalFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = qMetalFunction.h; path = include/qMetalFunction.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2CF896F124319720021D571 /* qMetalFunction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; name = qMetalFunction.mm; path = src/qMetalFunction.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2D28ADF13346B4A0062CAB4 /* qMetalCullState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalCullState.h; path = include/qMetalCullState.h; sourceTree = "<group>"; };
+		D2F4B5E01169B78800BA1269 /* qMetalRenderTarget.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; name = qMetalRenderTarget.mm; path = src/qMetalRenderTarget.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2F4B5E91169B79400BA1269 /* qMetalRenderTarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = qMetalRenderTarget.h; path = include/qMetalRenderTarget.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2F4B7221169CBCB00BA1269 /* qMetalDevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; name = qMetalDevice.mm; path = src/qMetalDevice.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D2F4B7261169CBF000BA1269 /* qMetalDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = qMetalDevice.h; path = include/qMetalDevice.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D2AAC07C0554694100DB518D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2C674FF1154941B006113D0 /* QuartzCore.framework in Frameworks */,
+				5E81877D19457C3500F608CD /* Metal.framework in Frameworks */,
+				AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DFFF38A50411DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC07E0554694100DB518D /* libqMetal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* qGL */ = {
+			isa = PBXGroup;
+			children = (
+				D2C67529115494E2006113D0 /* qCore.xcodeproj */,
+				5E0ABF8423625FBA00FBCDDD /* qMath.xcodeproj */,
+				08FB77AEFE84172EC02AAC07 /* Classes */,
+				32C88DFF0371C24200C91783 /* Other Sources */,
+				0867D69AFE84028FC02AAC07 /* Frameworks */,
+				034768DFFF38A50411DB9C8B /* Products */,
+			);
+			name = qGL;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5E81877C19457C3500F608CD /* Metal.framework */,
+				D2C674FD1154941B006113D0 /* QuartzCore.framework */,
+				AACBBE490F95108600F1A2B1 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		08FB77AEFE84172EC02AAC07 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				D2C675A411549BB6006113D0 /* qMetal.h */,
+				D2F4B7261169CBF000BA1269 /* qMetalDevice.h */,
+				D2F4B7221169CBCB00BA1269 /* qMetalDevice.mm */,
+				D2CF896B1243196A0021D571 /* qMetalFunction.h */,
+				D2CF896F124319720021D571 /* qMetalFunction.mm */,
+				5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */,
+				5E16F05D1F6EBD6C00E7DEA3 /* qMetalMaterial.h */,
+				5E2B356C1F772C6700AC68AF /* qMetalMesh.h */,
+				D2F4B5E91169B79400BA1269 /* qMetalRenderTarget.h */,
+				D2F4B5E01169B78800BA1269 /* qMetalRenderTarget.mm */,
+				D28170C01202139E003E56F0 /* qMetalTexture.h */,
+				5EBE3AC320DFDF1E00A527B1 /* qMetalTexture.mm */,
+				5E754BF72084673300EB14F4 /* qMetalComputeTexture.h */,
+				D2A0F23C1201E1470028AF5F /* States */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		32C88DFF0371C24200C91783 /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AA747D9E0F9514B9006C5449 /* qMetal_Prefix.pch */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		5E0ABF8523625FBA00FBCDDD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5E0ABF8923625FBA00FBCDDD /* libqMath.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D2A0F23C1201E1470028AF5F /* States */ = {
+			isa = PBXGroup;
+			children = (
+				5E16F0671F6EF4A300E7DEA3 /* qMetalBlendState.h */,
+				5E16F0691F6EF79A00E7DEA3 /* qMetalBlendState.mm */,
+				D2D28ADF13346B4A0062CAB4 /* qMetalCullState.h */,
+				5E16F0651F6EEB3A00E7DEA3 /* qMetalCullState.mm */,
+				D2A0F25D1201F2200028AF5F /* qMetalDepthStencilState.h */,
+				5E16F0631F6EEAAC00E7DEA3 /* qMetalDepthStencilState.mm */,
+				5E6F8F8B21288A7500D0801B /* qMetalSamplerState.h */,
+				5E6F8F8921288A6400D0801B /* qMetalSamplerState.mm */,
+				5E57D9D31E2BD53F00FED251 /* qMetalStencilState.h */,
+				5E16F0611F6EE76B00E7DEA3 /* qMetalStencilState.mm */,
+			);
+			name = States;
+			sourceTree = "<group>";
+		};
+		D2C6752A115494E2006113D0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2C6752E115494E2006113D0 /* libqCore.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC07A0554694100DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA747D9F0F9514B9006C5449 /* qMetal_Prefix.pch in Headers */,
+				D2C675A811549BB6006113D0 /* qMetal.h in Headers */,
+				D2F4B5EA1169B79400BA1269 /* qMetalRenderTarget.h in Headers */,
+				D2F4B7271169CBF000BA1269 /* qMetalDevice.h in Headers */,
+				5E57D9D41E2BD53F00FED251 /* qMetalStencilState.h in Headers */,
+				D2A0F25E1201F2200028AF5F /* qMetalDepthStencilState.h in Headers */,
+				D28170C11202139E003E56F0 /* qMetalTexture.h in Headers */,
+				D2CF896C1243196A0021D571 /* qMetalFunction.h in Headers */,
+				D2D28AE013346B4A0062CAB4 /* qMetalCullState.h in Headers */,
+				5E6F8F8C21288A7500D0801B /* qMetalSamplerState.h in Headers */,
+				5E754BF82084673400EB14F4 /* qMetalComputeTexture.h in Headers */,
+				5E2D28DA214D681A004687A7 /* qMetalIndirectMesh.h in Headers */,
+				5E16F0681F6EF4A300E7DEA3 /* qMetalBlendState.h in Headers */,
+				5E16F05E1F6EBD6C00E7DEA3 /* qMetalMaterial.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC07D0554694100DB518D /* qMetal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "qMetal" */;
+			buildPhases = (
+				D2AAC07A0554694100DB518D /* Headers */,
+				D2AAC07B0554694100DB518D /* Sources */,
+				D2AAC07C0554694100DB518D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D2DD1049128E949C0013AEBB /* PBXTargetDependency */,
+			);
+			name = qMetal;
+			productName = qGL;
+			productReference = D2AAC07E0554694100DB518D /* libqMetal.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1120;
+			};
+			buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "qMetal" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 0867D691FE84028FC02AAC07 /* qGL */;
+			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = D2C6752A115494E2006113D0 /* Products */;
+					ProjectRef = D2C67529115494E2006113D0 /* qCore.xcodeproj */;
+				},
+				{
+					ProductGroup = 5E0ABF8523625FBA00FBCDDD /* Products */;
+					ProjectRef = 5E0ABF8423625FBA00FBCDDD /* qMath.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				D2AAC07D0554694100DB518D /* qMetal */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		5E0ABF8923625FBA00FBCDDD /* libqMath.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libqMath.a;
+			remoteRef = 5E0ABF8823625FBA00FBCDDD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2C6752E115494E2006113D0 /* libqCore.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libqCore.a;
+			remoteRef = D2C6752D115494E2006113D0 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC07B0554694100DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E16F06A1F6EF79A00E7DEA3 /* qMetalBlendState.mm in Sources */,
+				5E16F0621F6EE76B00E7DEA3 /* qMetalStencilState.mm in Sources */,
+				5E16F0661F6EEB3A00E7DEA3 /* qMetalCullState.mm in Sources */,
+				D2F4B5E11169B78800BA1269 /* qMetalRenderTarget.mm in Sources */,
+				D2F4B7231169CBCB00BA1269 /* qMetalDevice.mm in Sources */,
+				D2CF8970124319720021D571 /* qMetalFunction.mm in Sources */,
+				5E6F8F8A21288A6500D0801B /* qMetalSamplerState.mm in Sources */,
+				5E16F0641F6EEAAC00E7DEA3 /* qMetalDepthStencilState.mm in Sources */,
+				5EBE3AC420DFDF1E00A527B1 /* qMetalTexture.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D2DD1049128E949C0013AEBB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = qCore;
+			targetProxy = D2DD1048128E949C0013AEBB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB921F08733DC00010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/qGL.dst;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G4;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = qMetal_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../qCore/include\"",
+					"\"$(SRCROOT)/../qMath/include\"",
+					"\"$(SRCROOT)/../qCategories/include\"",
+				);
+				INSTALL_PATH = /usr/local/lib;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_NAME = qMetal;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = Debug;
+		};
+		1DEB922008733DC00010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				DSTROOT = /tmp/qGL.dst;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G4;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = qMetal_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../qCore/include\"",
+					"\"$(SRCROOT)/../qMath/include\"",
+					"\"$(SRCROOT)/../qCategories/include\"",
+				);
+				INSTALL_PATH = /usr/local/lib;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_NAME = qMetal;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = Release;
+		};
+		1DEB922308733DC00010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		1DEB922408733DC00010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				OTHER_LDFLAGS = "-ObjC";
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+		D2DD0FAC128E90480013AEBB /* FInal */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				OTHER_LDFLAGS = "-ObjC";
+				SDKROOT = iphoneos;
+			};
+			name = FInal;
+		};
+		D2DD0FAD128E90480013AEBB /* FInal */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				DSTROOT = /tmp/qGL.dst;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G4;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = qMetal_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../qCore/include\"",
+					"\"$(SRCROOT)/../qMath/include\"",
+					"\"$(SRCROOT)/../qCategories/include\"",
+				);
+				INSTALL_PATH = /usr/local/lib;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_NAME = qMetal;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = FInal;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "qMetal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB921F08733DC00010E9CD /* Debug */,
+				1DEB922008733DC00010E9CD /* Release */,
+				D2DD0FAD128E90480013AEBB /* FInal */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = FInal;
+		};
+		1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "qMetal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB922308733DC00010E9CD /* Debug */,
+				1DEB922408733DC00010E9CD /* Release */,
+				D2DD0FAC128E90480013AEBB /* FInal */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = FInal;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}
