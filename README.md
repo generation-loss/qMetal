@@ -1,5 +1,5 @@
 # qMetal
-qMetal is light wrapper around Metal to provide building blocks for rendering engines, abstracting away some Metal-specifics into primitives that most rendering engineers are more comfortable with, while being relatively un-opinionated on how they are used, to let Metal's full feature set shine through.
+qMetal is light Objective-C++ wrapper around Metal to provide building blocks for rendering engines, abstracting away some Metal-specifics into primitives that most rendering engineers are more comfortable with, while being relatively un-opinionated on how they are used, to let Metal's full feature set shine through.
 
 The goal is to increase productivity with Metal, while enforcing best practices for performance (e.g. argument buffers) and still letting Metal's feature set shine through.
 
