@@ -27,7 +27,7 @@ Textures are a pre-existing primitive in Metal, and qMetal simply extends them b
 
 ### Meshes
 
-Again, meshes are clearly a pre-existing primitive in Metal; qMetal's again extends them by providing:
+Again, meshes are clearly a pre-existing primitive in Metal; qMetal extends them by providing:
 1. LOD support through multiple index buffers
 1. enforced argument buffer support for vertex streams
 1. simplified mesh creation through config classes
@@ -47,7 +47,7 @@ Materials provide:
 
 ### Indirect Meshes
 
-Indirect Meshes are an extension of qMetal's meshes, and similarly templated type that provides support for Metal's Indirect Command Buffers on the GPU.
+Indirect Meshes are an extension of qMetal's meshes, a similarly templated type that provides support for Metal's Indirect Command Buffers on the GPU.
 
 Indirect Meshes provide:
 1. a binding of multiple meshes to a single dispatch kernel
