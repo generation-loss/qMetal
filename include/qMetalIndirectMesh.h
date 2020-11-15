@@ -52,7 +52,7 @@ namespace qMetal
 		//mesh details
 		int MeshVertexStreamCount,
 		int MeshVertexStreamIndex,
-		NSUInteger MeshLODCount
+		NSUInteger MeshLODCount = 1
 	>
     class IndirectMesh
     {        
