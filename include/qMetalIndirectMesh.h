@@ -34,25 +34,27 @@ namespace qMetal
 {
     template<
 		//command buffer kernel
-		int ICBArgumentBufferIndex,				//where the indirect command buffer argument buffer is in the kernel shader
-		int ICBComputeParamsIndex,				//where the compute params live
-		int ICBVertexParamsIndex,				//where the vertex params live
-		int ICBVertexTextureIndex,				//where the vertex texture live
-		class ICBVertexInstanceParams,			//type of vertex instance params
-		int ICBVertexInstanceParamsIndex,		//where the vertex instance params live
-		int ICBFragmentParamsIndex,				//where the fragment params live
-		int ICBFragmentTextureIndex,			//where the fragment texture live
-		int ICBIndexArgumentBufferArrayIndex,	//where the index argument buffer array lives
-		int ICBVertexArgumentBufferArrayIndex,	//where the vertex argument buffer array lives
-	
+		int ICBArgumentBufferIndex,					//where the indirect command buffer argument buffer is in the kernel shader
+		int ICBComputeParamsIndex,					//where the compute params live
+		int ICBVertexParamsIndex,					//where the vertex params live
+		int ICBVertexTextureIndex,					//where the vertex texture live
+		class ICBVertexInstanceParams,				//type of vertex instance params
+		int ICBVertexInstanceParamsIndex,			//where the vertex instance params live
+		int ICBFragmentParamsIndex,					//where the fragment params live
+		int ICBFragmentTextureIndex,				//where the fragment texture live
+		int ICBIndexArgumentBufferArrayIndex,		//where the index argument buffer array lives
+		int ICBVertexArgumentBufferArrayIndex,		//where the vertex argument buffer array lives
+
 		//command buffer argument buffers
-		int IndirectIndexCountIndex,			//where the number of indices lives
-		int IndirectIndexStreamIndex,			//where the index buffer lives
-	
+		int IndirectIndexCountIndex,				//where the number of indices lives
+		int IndirectIndexStreamIndex,				//where the index buffer lives
+		int IndirectTessellationFactorBufferIndex,	//where the tesselation factor buffer lives
+
 		//mesh details
 		int MeshVertexStreamCount,
 		int MeshVertexStreamIndex,
-		NSUInteger MeshLODCount = 1
+		int TessellationStreamCount = 0,
+		int TessellationStreamFactorsIndex = EmptyIndex
 	>
     class IndirectMesh
     {        
@@ -61,7 +63,7 @@ namespace qMetal
         typedef struct Config
         {
 			Function					*function;
-			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, MeshLODCount>*> 	meshes;
+			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationStreamFactorsIndex>*> 	meshes;
 			NSUInteger					count;
 			
             Config()
@@ -145,10 +147,12 @@ namespace qMetal
 				
 				uint32_t *indexCount = (uint32_t*)[indexArgumentEncoder constantDataAtIndex:IndirectIndexCountIndex];
 				
-				for (NSUInteger LOD = 0; LOD < MeshLODCount; ++LOD)
+				*indexCount = it->GetConfig()->indexCount;
+				[indexArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:IndirectIndexStreamIndex];
+				
+				if (IndirectTessellationFactorBufferIndex != EmptyIndex)
 				{
-					indexCount[LOD] = it->GetConfig()->indexCount[LOD];
-					[indexArgumentEncoder setBuffer:it->GetIndexBuffer(LOD) offset:0 atIndex:(IndirectIndexStreamIndex + LOD)];
+					[indexArgumentEncoder setBuffer:it->GetTessellationFactorsBuffer() offset:0 atIndex:IndirectTessellationFactorBufferIndex];
 				}
 				
 				meshIndex++;
@@ -241,7 +245,7 @@ namespace qMetal
 			
 			for(auto &it : config->meshes)
 			{
-				it->UseResourcesAllLODs(encoder);
+				it->UseResources(encoder);
 			}
 			
 			[encoder executeCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
