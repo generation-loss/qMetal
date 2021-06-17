@@ -62,16 +62,19 @@ namespace qMetal
 		
         typedef struct Config
         {
-			Function					*function;
+            NSString*           		name;
+			Function*					function;
 			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationStreamFactorsIndex>*> 	meshes;
 			NSUInteger					count;
 			
-            Config()
-			: function(NULL)
+            Config(NSString* _name)
+			: name(_name)
+			, function(NULL)
             {}
 			
-			Config(Config* config)
-			: function(config->function)
+			Config(Config* config, NSString* _name)
+			: name(_name)
+			, function(config->function)
 			, meshes(config->meshes)
 			, count(config->count)
 			{}
@@ -88,7 +91,7 @@ namespace qMetal
 			MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor = [[MTLIndirectCommandBufferDescriptor alloc] init];
 			
 			NSUInteger vertexBindCount = 1; //vertex streams
-			vertexBindCount += (ICBVertexParamsIndex == EmptyIndex) ? 0 : 1;
+			vertexBindCount += (MeshVertexStreamIndex == EmptyIndex) ? MeshVertexStreamCount : 1;
 			vertexBindCount += (ICBVertexTextureIndex == EmptyIndex) ? 0 : 1;
 			vertexBindCount += (ICBVertexInstanceParamsIndex == EmptyIndex) ? 0 : 1;
 			
@@ -110,6 +113,7 @@ namespace qMetal
 			if (ICBVertexInstanceParamsIndex != EmptyIndex)
 			{
 				vertexInstanceParamsBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(ICBVertexInstanceParams) * config->count) options:0];
+				vertexInstanceParamsBuffer.label = [NSString stringWithFormat:@"%@ vertex instance params", config->name];
 			}
 			
 			// COMPUTE PIPELINE STATE FOR INDIRECT COMMAND BUFFER CONSTRUCTION
@@ -128,7 +132,7 @@ namespace qMetal
 			NSUInteger argumentBufferLength = argumentEncoder.encodedLength;
 			
 			commandBufferArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
-			commandBufferArgumentBuffer.label = @"Argument buffer for indirect command buffer"; //TODO more label. Debug only?
+			commandBufferArgumentBuffer.label = [NSString stringWithFormat:@"%@ indirect command buffer argument buffer", config->name];
 			
 			[argumentEncoder setArgumentBuffer:commandBufferArgumentBuffer offset:0];
 			[argumentEncoder setIndirectCommandBuffer:indirectCommandBuffer atIndex:ICBArgumentBufferIndex];
@@ -140,7 +144,7 @@ namespace qMetal
 				NSUInteger argumentBufferLength = indexArgumentEncoder.encodedLength;
 				
 				id <MTLBuffer> indexArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
-				indexArgumentBuffer.label = @"Argument buffer for indices";
+				indexArgumentBuffer.label = [NSString stringWithFormat:@"%@ indice argument buffer", config->name];
 				indexArgumentBuffers.push_back(indexArgumentBuffer);
 				
 				[indexArgumentEncoder setArgumentBuffer:indexArgumentBuffer offset:0];

@@ -49,6 +49,7 @@ namespace qMetal
             //_metalLayer.drawableSize = ???
             
             sCommandQueue           = [sDevice newCommandQueue];
+            sCommandQueue.label 	= @"qMetal Command Queue";
             
             sRenderTargetConfig 	= new RenderTarget::Config(@"Framebuffer");
 			
@@ -120,6 +121,7 @@ namespace qMetal
         {
 			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call Present()?")
             sCommandBuffer = [sCommandQueue commandBuffer];
+            sCommandQueue.label = [NSString stringWithFormat:@"qMetal Command Buffer for frame %i", sFrameIndex];
 		}
         
         id<MTLRenderCommandEncoder> Begin()

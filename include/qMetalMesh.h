@@ -77,7 +77,7 @@ namespace qMetal
 		
         typedef struct Config
         {
-            char*           			name;
+            NSString*					name;
 			ePrimitiveType				primitiveType;
             VertexStream				tessellationStreams[TessellationStreamCount];
             VertexStream				vertexStreams[VertexStreamCount];
@@ -89,9 +89,9 @@ namespace qMetal
 			eTessellationFactorMode 	tessellationFactorMode;
 			NSUInteger					tessellationInstanceCount;
             
-            Config()
-            : name(NULL)
-			, primitiveType(ePrimitiveType_Triangle)
+            Config(NSString* _name)
+            : name(_name)
+            , primitiveType(ePrimitiveType_Triangle)
             , vertexCount(0)
             , indices16(NULL)
             , indices32(NULL)
@@ -99,6 +99,7 @@ namespace qMetal
             , tessellated(false)
 			, tessellationInstanceCount(0)
             {
+				
 			}
 			
 			bool IsIndexed() const
@@ -125,7 +126,7 @@ namespace qMetal
 				NSUInteger count = (tessellationStream.count == 0) ? (config->indexCount / 3) : tessellationStream.count;
 				
 				tessellationBuffers[i] = [qMetal::Device::Get() newBufferWithBytes:tessellationStream.data length:(NSUInteger)tessellationStream.type * count options:0];
-				[tessellationBuffers[i] setLabel:@"tessellation buffer"];
+				tessellationBuffers[i].label = [NSString stringWithFormat:@"%@ tesselation buffer %i", config->name, i];
 			}
 			
 			for (int i = 0; i < VertexStreamCount; ++i)
@@ -139,19 +140,19 @@ namespace qMetal
 				NSUInteger count = (vertexStream.count == 0) ? config->vertexCount : vertexStream.count;
 				
 				vertexBuffers[i] = [qMetal::Device::Get() newBufferWithBytes:vertexStream.data length:(NSUInteger)vertexStream.type * count options:MTLResourceStorageModeShared];
-				[vertexBuffers[i] setLabel:[NSString stringWithFormat:@"vertex buffer %i", i]];
+				vertexBuffers[i].label = [NSString stringWithFormat:@"%@ vertices %i", config->name, i];
 			}
 			
 			if (config->indices16 != NULL)
 			{
 				indexBuffer = [qMetal::Device::Get() newBufferWithBytes:config->indices16 length:sizeof(uint16_t) * config->indexCount options:0];
+				indexBuffer.label = [NSString stringWithFormat:@"%@ 16-bit indices", config->name];
 			}
 			else if (config->indices32 != NULL)
 			{
 				indexBuffer = [qMetal::Device::Get() newBufferWithBytes:config->indices32 length:sizeof(uint32_t) * config->indexCount options:0];
+				indexBuffer.label = [NSString stringWithFormat:@"%@ 32-bit indices", config->name];
 			}
-			
-			[indexBuffer setLabel:[NSString stringWithFormat:@"index buffer"]];
 			
 			if (config->tessellated)
 			{
@@ -166,7 +167,7 @@ namespace qMetal
 				
 				tessellationFactorsBuffer = [qMetal::Device::Get() newBufferWithLength:(tesselationFactorCount * sizeof(MTLTriangleTessellationFactorsHalf))
                                                options:MTLResourceStorageModePrivate];
-				tessellationFactorsBuffer.label = @"Tessellation Factors";
+				tessellationFactorsBuffer.label = [NSString stringWithFormat:@"%@ tessellation factors", config->name];
 			}
 		}
 		

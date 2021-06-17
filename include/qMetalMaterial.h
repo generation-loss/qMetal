@@ -169,6 +169,8 @@ namespace qMetal
             {
 				MTLComputePipelineDescriptor *computeDesc = [MTLComputePipelineDescriptor new];
 				
+				computeDesc.label = config->name;
+				
 				computeDesc.computeFunction = config->computeFunction->Get();
 				
 				computePipelineState 	= [qMetal::Device::Get() newComputePipelineStateWithDescriptor:computeDesc options:MTLPipelineOptionNone reflection:nil error:&error];
@@ -182,6 +184,7 @@ namespace qMetal
 				for (uint32_t i = 0; i < Q_METAL_FRAMES_TO_BUFFER; ++i)
 				{
 					computeParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_ComputeParams) options:0];
+					computeParamsBuffer[i].label = [NSString stringWithFormat:@"%@ compute params (frame %i)", config->name, i];
 				}
 			}
 			
@@ -251,19 +254,19 @@ namespace qMetal
 					if (_VertexParamsIndex != EmptyIndex)
 					{
 						vertexParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_VertexParams) options:0];
-						vertexParamsBuffer[i].label = @"Vertex Shader Params Argument Buffer";
+						vertexParamsBuffer[i].label = [NSString stringWithFormat:@"%@ vertex params (frame %i)", config->name, i];
 					}
 					
 					if (_FragmentParamsIndex != EmptyIndex)
 					{
 						fragmentParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_FragmentParams) options:0];
-						fragmentParamsBuffer[i].label = @"Fragment Shader Params Argument Buffer";
+						fragmentParamsBuffer[i].label = [NSString stringWithFormat:@"%@ fragment params (frame %i)", config->name, i];
 					}
 					
 					if (IsInstanced() && (sizeof(_InstanceParams) > 0))
 					{
 						instanceParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:(sizeof(_InstanceParams) * config->instanceCount) options:0];
-						instanceParamsBuffer[i].label = @"Instance Params Argument Buffer";
+						instanceParamsBuffer[i].label = [NSString stringWithFormat:@"%@ instance params (frame %i)", config->name, i];
 					}
 				}
 				
@@ -276,7 +279,7 @@ namespace qMetal
 					id <MTLArgumentEncoder> vertexTextureEncoder
 					= [config->vertexFunction->Get() newArgumentEncoderWithBufferIndex:_VertexTextureIndex];
 					vertexTextureBuffer = [qMetal::Device::Get() newBufferWithLength:vertexTextureEncoder.encodedLength options:0];
-					vertexTextureBuffer.label = @"Vertex Shader Texture Argument Buffer";
+					vertexTextureBuffer.label = [NSString stringWithFormat:@"%@ vertex textures", config->name];
 					[vertexTextureEncoder setArgumentBuffer:vertexTextureBuffer offset:0];
 					
 					for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
@@ -293,7 +296,7 @@ namespace qMetal
 					id <MTLArgumentEncoder> fragmentTextureEncoder
 					= [config->fragmentFunction->Get() newArgumentEncoderWithBufferIndex:_FragmentTextureIndex];
 					fragmentTextureBuffer = [qMetal::Device::Get() newBufferWithLength:fragmentTextureEncoder.encodedLength options:0];
-					fragmentTextureBuffer.label = @"Fragment Shader Texture Argument Buffer";
+					fragmentTextureBuffer.label = [NSString stringWithFormat:@"%@ fragment textures", config->name];
 					[fragmentTextureEncoder setArgumentBuffer:fragmentTextureBuffer offset:0];
 					
 					for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
