@@ -220,7 +220,7 @@ namespace qMetal
 				{
 					for(int streamIndex = 0; streamIndex < MeshVertexStreamCount; ++streamIndex)
 					{
-						[encoder setBuffer:it->GetVertexBuffer(streamIndex) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex * MeshVertexStreamIndex + streamIndex)];
+						[encoder setBuffer:it->GetVertexBuffer(streamIndex) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex * MeshVertexStreamCount + streamIndex)];
 					}
 				}
 				else
