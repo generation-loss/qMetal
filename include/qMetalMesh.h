@@ -283,6 +283,11 @@ namespace qMetal
 			}
 			
 			[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
+			
+			if (config->tessellated)
+			{
+				[encoder useResource:tessellationFactorsBuffer usage:MTLResourceUsageWrite];
+			}
 		}
 		
 		void UseResources(id<MTLRenderCommandEncoder> encoder)
@@ -293,11 +298,6 @@ namespace qMetal
 			}
 			
 			[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
-			
-			if (config->tessellated)
-			{
-				[encoder useResource:tessellationFactorsBuffer usage:MTLResourceUsageWrite];
-			}
 		}
 		
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
