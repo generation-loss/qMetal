@@ -185,7 +185,7 @@ namespace qMetal
 		
         void EncodeCompute(id<MTLComputeCommandEncoder> encoder, eUnit textureIndex) const;
 		void EncodeArgumentBuffer(id<MTLArgumentEncoder> encoder, eUnit textureIndex, eUnit samplerIndex) const;
-		void EncodeUsage(id<MTLRenderCommandEncoder> encoder) const;
+		void EncodeUsage(id<MTLRenderCommandEncoder> encoder, MTLRenderStages stages) const;
 		
 		float BytesPerPixel() const;
 		

@@ -369,7 +369,7 @@ namespace qMetal
 				{
 					if (config->vertexTextures[i] != NULL)
 					{
-						config->vertexTextures[i]->EncodeUsage(encoder);
+						config->vertexTextures[i]->EncodeUsage(encoder, MTLRenderStageVertex);
 					}
 				}
 			}
@@ -382,7 +382,7 @@ namespace qMetal
 				{
 					if (config->fragmentTextures[i] != NULL)
 					{
-						config->fragmentTextures[i]->EncodeUsage(encoder);
+						config->fragmentTextures[i]->EncodeUsage(encoder, MTLRenderStageFragment);
 					}
 				}
 			}

@@ -127,10 +127,10 @@ namespace qMetal
 	}
 
 	
-	void Texture::EncodeUsage(id<MTLRenderCommandEncoder> encoder) const
+	void Texture::EncodeUsage(id<MTLRenderCommandEncoder> encoder, MTLRenderStages stages) const
 	{
 		qASSERT(texture != nil);
-		[encoder useResource:texture usage:MTLResourceUsageSample];
+		[encoder useResource:texture usage:MTLResourceUsageSample stages:stages];
 	}
 	
 	float Texture::BytesPerPixel() const
@@ -242,7 +242,6 @@ namespace qMetal
 		NSURL* url = [NSURL fileURLWithPath:path];
 		
 		id<MTLTexture> texture = [sMTKTextureLoader newTextureWithContentsOfURL:url options:@{
-																							  MTKTextureLoaderOptionAllocateMipmaps:@YES,
 																							  MTKTextureLoaderOptionTextureStorageMode:@(CPUReadable ? MTLStorageModeShared : MTLStorageModePrivate)
 																							  } error:&error];
 		qASSERTM(error == nil, "Texture::LoadByName: error loading texture %s, %s", [nameWithExtension UTF8String], [[error description] UTF8String]);
