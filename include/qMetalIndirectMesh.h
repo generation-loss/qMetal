@@ -107,6 +107,7 @@ namespace qMetal
 			indirectCommandBufferDescriptor.maxKernelBufferBindCount = 0;
 			
 			indirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:indirectCommandBufferDescriptor maxCommandCount:config->count options:0];
+			indirectCommandBuffer.label = [NSString stringWithFormat:@"%@ indirect command buffer", config->name];
 			
 			// SET UP SOME BUFFERS
 			
