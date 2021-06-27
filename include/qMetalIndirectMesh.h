@@ -85,6 +85,8 @@ namespace qMetal
 		{
 			qASSERTM(config->meshes.size() > 0, "Mesh config count can can not be zero");
 			qASSERTM(config->meshes.size() < 14, "Mesh config count can can not exceed %i", 29); //32 LIMIT, get based on device
+			qASSERTM(config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex == EmptyIndex), "Mesh isn't indexed you supplied an index stream index");
+			qASSERTM(!config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex != EmptyIndex), "Mesh is indexed but you didn't supply an index stream index");
 			
 			// INDIRECT COMMAND BUFFER
 			
@@ -99,7 +101,9 @@ namespace qMetal
 			fragmentBindCount += (ICBFragmentParamsIndex == EmptyIndex) ? 0 : 1;
 			fragmentBindCount += (ICBFragmentTextureIndex == EmptyIndex) ? 0 : 1;
 			
-			indirectCommandBufferDescriptor.commandTypes = MTLIndirectCommandTypeDrawIndexed;
+			indirectCommandBufferDescriptor.commandTypes = IndirectIndexStreamIndex == EmptyIndex ?
+															(TessellationStreamFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawPatches : MTLIndirectCommandTypeDraw) :
+															(TessellationStreamFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawIndexedPatches : MTLIndirectCommandTypeDrawIndexed);
 			indirectCommandBufferDescriptor.inheritPipelineState = true;
 			indirectCommandBufferDescriptor.inheritBuffers = false;
 			indirectCommandBufferDescriptor.maxVertexBufferBindCount = vertexBindCount;
@@ -151,8 +155,8 @@ namespace qMetal
 				[indexArgumentEncoder setArgumentBuffer:indexArgumentBuffer offset:0];
 				
 				uint32_t *indexCount = (uint32_t*)[indexArgumentEncoder constantDataAtIndex:IndirectIndexCountIndex];
-				
 				*indexCount = it->GetConfig()->indexCount;
+				
 				[indexArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:IndirectIndexStreamIndex];
 				
 				if (IndirectTessellationFactorBufferIndex != EmptyIndex)
