@@ -88,7 +88,7 @@ namespace qMetal
 		
         void Encode(id<MTLRenderCommandEncoder> encoder);
     
-        static DepthStencilState *PredefinedStates[eDepthStencilState_Count];
+        static DepthStencilState *PredefinedState(eDepthStencilState state);
     };
 }
 
