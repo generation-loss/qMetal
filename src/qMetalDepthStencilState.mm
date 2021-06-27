@@ -48,8 +48,8 @@ namespace qMetal
 			   eStencilState _backStencil)
 	: depthTest(_depthTest)
 	, depthWrite(_depthWrite)
-	, frontStencil(StencilState::PredefinedStates[_frontStencil])
-	, backStencil(StencilState::PredefinedStates[_backStencil])
+	, frontStencil(StencilState::PredefinedState(_frontStencil))
+	, backStencil(StencilState::PredefinedState(_backStencil))
 	{
 		descriptor = [[MTLDepthStencilDescriptor alloc] init];
 		descriptor.depthWriteEnabled = depthWrite == eDepthWrite_Enable;

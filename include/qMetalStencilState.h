@@ -83,8 +83,8 @@ namespace qMetal
                    eStencilOperation _depthFail,
                    uint32_t _readMask = 0xffffffff,
                    uint32_t _writeMask = 0xffffffff);
-				   
-	   static StencilState *PredefinedStates[eStencilState_Count];
+	   
+	   static StencilState* PredefinedState(eStencilState state);
     };
 }
 

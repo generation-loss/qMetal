@@ -23,18 +23,23 @@ SOFTWARE.
 #include "qMetalStencilState.h"
 
 namespace qMetal
-{        
-    StencilState *StencilState::PredefinedStates[eStencilState_Count] = {
-#define STENCIL_STATE(xxenum, xxstenciltest, xxpass, xxfail, xxzfail, xxreadmask, xxwritemask) \
-    new StencilState(StencilState::eStencilTest_ ## xxstenciltest, \
-        StencilState::eStencilOperation_ ## xxpass, \
-        StencilState::eStencilOperation_ ## xxfail, \
-        StencilState::eStencilOperation_ ## xxzfail, \
-        xxreadmask, \
-        xxwritemask),
-        STENCIL_STATES
-#undef STENCIL_STATE
-    };
+{
+	StencilState* StencilState::PredefinedState(eStencilState state)
+	{
+		static StencilState *predefinedStates[eStencilState_Count] = {
+	#define STENCIL_STATE(xxenum, xxstenciltest, xxpass, xxfail, xxzfail, xxreadmask, xxwritemask) \
+		new StencilState(StencilState::eStencilTest_ ## xxstenciltest, \
+			StencilState::eStencilOperation_ ## xxpass, \
+			StencilState::eStencilOperation_ ## xxfail, \
+			StencilState::eStencilOperation_ ## xxzfail, \
+			xxreadmask, \
+			xxwritemask),
+			STENCIL_STATES
+	#undef STENCIL_STATE
+		};
+		
+		return predefinedStates[state];
+	}
 	
 	StencilState::StencilState(
 		eStencilTest _stencilTest,
