@@ -175,7 +175,6 @@ namespace qMetal
 			[encoder setComputePipelineState:computePipelineState];
 			
 			[encoder useResource:indirectCommandBuffer usage:MTLResourceUsageWrite];
-			[encoder useResource:commandBufferArgumentBuffer usage:MTLResourceUsageRead];
 			
 			[encoder setBuffer:commandBufferArgumentBuffer offset:0 atIndex:ICBArgumentBufferIndex];
 			
@@ -213,20 +212,22 @@ namespace qMetal
 				}
 			}
 
+			const bool useVertexArgumentBuffers = MeshVertexStreamIndex != EmptyIndex;
 			int meshIndex = 0;
 			for(auto &it : config->meshes)
 			{
+				it->UseResources(encoder, useVertexArgumentBuffers);
 				[encoder setBuffer:indexArgumentBuffers[meshIndex] offset:0 atIndex:(ICBIndexArgumentBufferArrayIndex + meshIndex)];
-				if (MeshVertexStreamIndex == EmptyIndex)
+				if (useVertexArgumentBuffers)
+				{
+					[encoder setBuffer:it->GetVertexArgumentBufferForMaterial(material) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex)];
+				}
+				else
 				{
 					for(int streamIndex = 0; streamIndex < MeshVertexStreamCount; ++streamIndex)
 					{
 						[encoder setBuffer:it->GetVertexBuffer(streamIndex) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex * MeshVertexStreamCount + streamIndex)];
 					}
-				}
-				else
-				{
-					[encoder setBuffer:it->GetVertexArgumentBufferForMaterial(material) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex)];
 				}
 				meshIndex++;
 			}
@@ -246,6 +247,11 @@ namespace qMetal
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
         void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
         {
+			if (ICBVertexInstanceParamsIndex != EmptyIndex)
+			{
+				[encoder useResource:vertexInstanceParamsBuffer usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
+			}
+			
 			material->Encode(encoder);
 			
 			for(auto &it : config->meshes)

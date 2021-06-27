@@ -387,6 +387,7 @@ namespace qMetal
 				}
 			}
 			
+			
 			if (!_ForIndirectCommandBuffer)
 			{
 				if (_VertexParamsIndex != EmptyIndex)
@@ -414,6 +415,36 @@ namespace qMetal
 					if (_FragmentTextureIndex != EmptyIndex)
 					{
 						[encoder setFragmentBuffer:fragmentTextureBuffer offset:0 atIndex:_FragmentTextureIndex];
+					}
+				}
+			}
+			else
+			{
+				if (_VertexParamsIndex != EmptyIndex)
+				{
+					[encoder useResource:vertexParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
+				}
+				
+				if (_VertexTextureIndex != EmptyIndex)
+				{
+					[encoder useResource:vertexTextureBuffer usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
+				}
+				
+				if (_InstanceParamsIndex != EmptyIndex)
+				{
+					[encoder useResource:instanceParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
+				}
+				
+				if (config->fragmentFunction != NULL)
+				{
+					if (_FragmentParamsIndex != EmptyIndex)
+					{
+						[encoder useResource:fragmentParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageFragment];
+					}
+					
+					if (_FragmentTextureIndex != EmptyIndex)
+					{
+						[encoder useResource:fragmentTextureBuffer usage:MTLResourceUsageRead stages:MTLRenderStageFragment];
 					}
 				}
 			}

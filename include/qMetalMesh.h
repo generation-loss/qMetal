@@ -275,11 +275,14 @@ namespace qMetal
 			[indirectRenderCommand drawIndexedPrimitives:(MTLPrimitiveType)config->primitiveType indexCount:config->indexCount indexType:((config->indices16[0] != NULL) ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32) indexBuffer:indexBuffer indexBufferOffset:0 instanceCount:1 baseVertex:0 baseInstance:0];
 		}
 		
-		void UseResources(id<MTLComputeCommandEncoder> encoder)
+		void UseResources(id<MTLComputeCommandEncoder> encoder, bool withVertexArgumentBuffer)
 		{
-			for (int i = 0; i < VertexStreamCount; ++i)
+			if (withVertexArgumentBuffer)
 			{
-				[encoder useResource:vertexBuffers[i] usage:MTLResourceUsageRead];
+				for (int i = 0; i < VertexStreamCount; ++i)
+				{
+					[encoder useResource:vertexBuffers[i] usage:MTLResourceUsageRead];
+				}
 			}
 			
 			[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
@@ -298,6 +301,11 @@ namespace qMetal
 			}
 			
 			[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
+			
+			if (config->tessellated)
+			{
+				[encoder useResource:tessellationFactorsBuffer usage:MTLResourceUsageRead];
+			}
 		}
 		
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
