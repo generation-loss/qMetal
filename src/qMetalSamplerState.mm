@@ -21,19 +21,26 @@ SOFTWARE.
 */
 
 #include "qMetalSamplerState.h"
+#include "qCore.h"
 
 namespace qMetal
-{        
-    SamplerState *SamplerState::PredefinedStates[eSamplerState_Count] = {
-#define SAMPLER_STATE(xxenum, xxminfilter, xxmagfilter, xxmipfilter, xxwrapx, xxwrapy) \
-    new SamplerState(SamplerState::eMinFilter_ ## xxminfilter, \
-        SamplerState::eMagFilter_ ## xxmagfilter, \
-        SamplerState::eMipFilter_ ## xxmipfilter, \
-		SamplerState::eWrap_ ## xxwrapx, \
-		SamplerState::eWrap_ ## xxwrapy),
-        SAMPLER_STATES
-#undef SAMPLER_STATE
-    };
+{
+	SamplerState* SamplerState::PredefinedState(eSamplerState state)
+	{
+		SamplerState* predefinedStates[eSamplerState_Count] = {
+	#define SAMPLER_STATE(xxenum, xxminfilter, xxmagfilter, xxmipfilter, xxwrapx, xxwrapy) \
+		new SamplerState(SamplerState::eMinFilter_ ## xxminfilter, \
+			SamplerState::eMagFilter_ ## xxmagfilter, \
+			SamplerState::eMipFilter_ ## xxmipfilter, \
+			SamplerState::eWrap_ ## xxwrapx, \
+			SamplerState::eWrap_ ## xxwrapy),
+			SAMPLER_STATES
+	#undef SAMPLER_STATE
+		};
+		
+		qASSERT(state < eSamplerState_Count);
+		return predefinedStates[state];
+	}
 		
 	SamplerState::SamplerState(
 				 eMinFilter      _minFilter,

@@ -21,16 +21,23 @@ SOFTWARE.
 */
 
 #include "qMetalCullState.h"
+#include "qCore.h"
 
 namespace qMetal
-{        
-    CullState *CullState::PredefinedStates[eCullState_Count] = {
-#define CULL_STATE(xxenum, xxfrontface, xxcullface) \
-    new CullState(CullState::eFrontFace_ ## xxfrontface, \
-    CullState::eCullFace_ ## xxcullface),
-        CULL_STATES
-#undef CULL_STATE        
-    };
+{
+	CullState* CullState::PredefinedState(eCullState state)
+	{
+		CullState* predefinedStates[eCullState_Count] = {
+	#define CULL_STATE(xxenum, xxfrontface, xxcullface) \
+		new CullState(CullState::eFrontFace_ ## xxfrontface, \
+		CullState::eCullFace_ ## xxcullface),
+			CULL_STATES
+	#undef CULL_STATE
+		};
+		
+		qASSERT(state < eCullState_Count);
+		return predefinedStates[state];
+	}
 	  
 	CullState::CullState(
 		eCullWinding    _winding,

@@ -65,7 +65,7 @@ namespace qMetal
       
         void Encode(id<MTLRenderCommandEncoder> encoder);
         
-        static CullState    *PredefinedStates[eCullState_Count];
+        static CullState* PredefinedState(eCullState state);
     };
 }
 

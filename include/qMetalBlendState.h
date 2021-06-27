@@ -89,7 +89,7 @@ namespace qMetal
 			eBlendFactor _alphaSrcBlendFactor,
 			eBlendFactor _alphaDstBlendFactor);
         
-        static BlendState *PredefinedStates[eBlendState_Count];
+        static BlendState* PredefinedState(eBlendState state);
     };
 }
 

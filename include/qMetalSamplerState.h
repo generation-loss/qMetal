@@ -92,7 +92,7 @@ namespace qMetal
 		
 		void Encode(id<MTLArgumentEncoder> encoder, uint32_t index) const;
         
-        static SamplerState *PredefinedStates[eSamplerState_Count];
+        static SamplerState* PredefinedState(eSamplerState);
 		
 	private:
 		

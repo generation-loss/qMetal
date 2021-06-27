@@ -21,12 +21,13 @@ SOFTWARE.
 */
 
 #include "qMetalDepthStencilState.h"
+#include "qCore.h"
 
 namespace qMetal
 {
-	DepthStencilState *DepthStencilState::PredefinedState(eDepthStencilState state)
+	DepthStencilState* DepthStencilState::PredefinedState(eDepthStencilState state)
 	{
-		static DepthStencilState *predefinedStates[eDepthStencilState_Count] = {
+		static DepthStencilState* predefinedStates[eDepthStencilState_Count] = {
 	#define DEPTHSTENCIL_STATE(xxenum, xxdepthtest, xxdepthwrite, xxstencil) \
 		new DepthStencilState(DepthStencilState::eDepthTest_ ## xxdepthtest, \
 		DepthStencilState::eDepthWrite_ ## xxdepthwrite, \
@@ -35,10 +36,9 @@ namespace qMetal
 	#undef DEPTHSTENCIL_STATE
 		};
 		
+		qASSERT(state < eDepthStencilState_Count);
 		return predefinedStates[state];
 	}
-
-
         
 	DepthStencilState::DepthStencilState(
 			   eDepthTest _depthTest,

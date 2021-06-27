@@ -21,21 +21,28 @@ SOFTWARE.
 */
 
 #include "qMetalBlendState.h"
+#include "qCore.h"
 
 namespace qMetal
-{        
-    BlendState *BlendState::PredefinedStates[eBlendState_Count] = {
-#define BLEND_STATE(xxenum, xxblend, xxrgbop, xxrgbsrc, xxrgbdst, xxalphaop, xxalphasrc, xxalphadst) \
-    new BlendState(xxblend, \
-        BlendState::eBlendOperation_ ## xxrgbop, \
-        BlendState::eBlendFactor_ ## xxrgbsrc, \
-        BlendState::eBlendFactor_ ## xxrgbdst, \
-        BlendState::eBlendOperation_ ## xxalphaop, \
-        BlendState::eBlendFactor_ ## xxalphasrc, \
-        BlendState::eBlendFactor_ ## xxalphadst),
-        BLEND_STATES
-#undef BLEND_STATE
-    };
+{
+	BlendState* BlendState::PredefinedState(eBlendState state)
+	{
+		BlendState* predefinedStates[eBlendState_Count] = {
+	#define BLEND_STATE(xxenum, xxblend, xxrgbop, xxrgbsrc, xxrgbdst, xxalphaop, xxalphasrc, xxalphadst) \
+		new BlendState(xxblend, \
+			BlendState::eBlendOperation_ ## xxrgbop, \
+			BlendState::eBlendFactor_ ## xxrgbsrc, \
+			BlendState::eBlendFactor_ ## xxrgbdst, \
+			BlendState::eBlendOperation_ ## xxalphaop, \
+			BlendState::eBlendFactor_ ## xxalphasrc, \
+			BlendState::eBlendFactor_ ## xxalphadst),
+			BLEND_STATES
+	#undef BLEND_STATE
+		};
+		
+		qASSERT(state < eBlendState_Count);
+		return predefinedStates[state];
+	}
 	
 	BlendState::BlendState(
 		bool _blendEnabled,

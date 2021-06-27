@@ -203,7 +203,7 @@ namespace qMetal
 		
 		const Config* GetConfig() const;
 		const NSString* GetName() const;
-		static Texture* LoadByName(const NSString *name, const bool CPUReadable = false, const SamplerState *samplerState = SamplerState::PredefinedStates[eSamplerState_LinearLinearLinear_RepeatRepeat]);
+		static Texture* LoadByName(const NSString *name, const bool CPUReadable = false, const SamplerState *samplerState = SamplerState::PredefinedState(eSamplerState_LinearLinearLinear_RepeatRepeat));
         
     private:
 		

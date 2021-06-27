@@ -21,12 +21,13 @@ SOFTWARE.
 */
 
 #include "qMetalStencilState.h"
+#include "qCore.h"
 
 namespace qMetal
 {
 	StencilState* StencilState::PredefinedState(eStencilState state)
 	{
-		static StencilState *predefinedStates[eStencilState_Count] = {
+		static StencilState* predefinedStates[eStencilState_Count] = {
 	#define STENCIL_STATE(xxenum, xxstenciltest, xxpass, xxfail, xxzfail, xxreadmask, xxwritemask) \
 		new StencilState(StencilState::eStencilTest_ ## xxstenciltest, \
 			StencilState::eStencilOperation_ ## xxpass, \
@@ -38,6 +39,7 @@ namespace qMetal
 	#undef STENCIL_STATE
 		};
 		
+		qASSERT(state < eStencilState_Count);
 		return predefinedStates[state];
 	}
 	

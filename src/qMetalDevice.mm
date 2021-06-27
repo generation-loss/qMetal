@@ -133,7 +133,7 @@ namespace qMetal
             
             //update our render target config with the current drawable colour texture, then create a render target (lightweight as no textures are allocated) to get our renderPassDescriptor / encoder
             //TODO this is a leak
-			sRenderTargetConfig->colourTexture[RenderTarget::eColorAttachment_0] = new Texture([sDrawable texture], SamplerState::PredefinedStates[eSamplerState_PointPointNone_ClampClamp]);
+			sRenderTargetConfig->colourTexture[RenderTarget::eColorAttachment_0] = new Texture([sDrawable texture], SamplerState::PredefinedState(eSamplerState_PointPointNone_ClampClamp));
             sRenderTarget = new RenderTarget(sRenderTargetConfig);
             
             return sRenderTarget->Begin();
