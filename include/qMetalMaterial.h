@@ -88,7 +88,7 @@ namespace qMetal
             , depthStencilState(NULL)
 			, stencilReferenceValue(0)
             , cullState(NULL)
-			, instanceCount(0)
+			, instanceCount(1)
             , tessellationIndexBufferType(eTessellationIndexBufferType_16)
 			, tessellationFactorMode(eTessellationFactorMode_Constant)
 			, alphaToCoverage(false)
@@ -232,7 +232,7 @@ namespace qMetal
 					renderDesc.tessellationOutputWindingOrder = MTLWindingCounterClockwise;
 					renderDesc.tessellationPartitionMode = MTLTessellationPartitionModeFractionalEven; 			//TODO is this what we want?
 					renderDesc.tessellationFactorFormat = MTLTessellationFactorFormatHalf; 						//This is the only option
-					renderDesc.maxTessellationFactor = 16; 														//The limit on A12 devices is 64. I don't think we need that
+					renderDesc.maxTessellationFactor = 64; 														//The limit on A11 and below is 16
 					renderDesc.tessellationFactorStepFunction = (config->tessellationFactorMode == eTessellationFactorMode_Constant) ?
 						(IsInstanced() ? MTLTessellationFactorStepFunctionPerInstance : MTLTessellationFactorStepFunctionConstant) :
 						(IsInstanced() ? MTLTessellationFactorStepFunctionPerPatchAndPerInstance : MTLTessellationFactorStepFunctionPerPatch);
@@ -484,6 +484,7 @@ namespace qMetal
 		
 		_InstanceParams* CurrentFrameInstanceParams(uint32_t instanceIndex) const
 		{
+			qASSERTM(IsInstanced(), "Asking for instance %i but with a material that isn't instanced", instanceIndex);
 			qASSERTM(instanceIndex < config->instanceCount, "Asking for instance %i but with a material that only supports %i", instanceIndex, config->instanceCount);
 			return (_InstanceParams*)([instanceParamsBuffer[qMetal::Device::CurrentFrameIndex()] contents]) + instanceIndex;
 		}
@@ -522,7 +523,7 @@ namespace qMetal
 		
 		const bool IsInstanced() const
 		{
-			return config->instanceCount > 0;
+			return config->instanceCount > 1;
 		}
 		
 		const NSUInteger InstanceCount() const
