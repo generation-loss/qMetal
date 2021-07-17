@@ -42,19 +42,21 @@ namespace qMetal
 		int ICBVertexInstanceParamsIndex,			//where the vertex instance params live
 		int ICBFragmentParamsIndex,					//where the fragment params live
 		int ICBFragmentTextureIndex,				//where the fragment texture live
-		int ICBIndexArgumentBufferArrayIndex,		//where the index argument buffer array lives
+		int ICBInstanceArgumentBufferArrayIndex,	//where the index and tesselation argument buffer array lives
 		int ICBVertexArgumentBufferArrayIndex,		//where the vertex argument buffer array lives
 
 		//command buffer argument buffers
-		int IndirectIndexCountIndex,				//where the number of indices lives
+		int IndirectVertexIndexCountIndex,			//where the number of indices lives
 		int IndirectIndexStreamIndex,				//where the index buffer lives
 		int IndirectTessellationFactorBufferIndex,	//where the tesselation factor buffer lives
+		int IndirectTessellationPatchIndexBufferIndex, //where the patch index buffer livess
 
 		//mesh details
 		int MeshVertexStreamCount,
 		int MeshVertexStreamIndex,
 		int TessellationStreamCount = 0,
-		int TessellationStreamFactorsIndex = EmptyIndex
+		int TessellationFactorsIndex = EmptyIndex,
+		int TessellationPatchIndicesIndex = EmptyIndex
 	>
     class IndirectMesh
     {        
@@ -64,7 +66,7 @@ namespace qMetal
         {
             NSString*           		name;
 			Function*					function;
-			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationStreamFactorsIndex>*> 	meshes;
+			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationFactorsIndex, TessellationPatchIndicesIndex>*> 	meshes;
 			NSUInteger					count;
 			
             Config(NSString* _name)
@@ -85,7 +87,7 @@ namespace qMetal
 		{
 			qASSERTM(config->meshes.size() > 0, "Mesh config count can can not be zero");
 			qASSERTM(config->meshes.size() < 14, "Mesh config count can can not exceed %i", 29); //32 LIMIT, get based on device
-			qASSERTM(config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex == EmptyIndex), "Mesh isn't indexed you supplied an index stream index");
+			qASSERTM(config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex == EmptyIndex), "Mesh isn't indexed but you supplied an index stream index");
 			qASSERTM(!config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex != EmptyIndex), "Mesh is indexed but you didn't supply an index stream index");
 			
 			// INDIRECT COMMAND BUFFER
@@ -102,8 +104,8 @@ namespace qMetal
 			fragmentBindCount += (ICBFragmentTextureIndex == EmptyIndex) ? 0 : 1;
 			
 			indirectCommandBufferDescriptor.commandTypes = IndirectIndexStreamIndex == EmptyIndex ?
-															(TessellationStreamFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawPatches : MTLIndirectCommandTypeDraw) :
-															(TessellationStreamFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawIndexedPatches : MTLIndirectCommandTypeDrawIndexed);
+															(TessellationFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawPatches : MTLIndirectCommandTypeDraw) :
+															(TessellationFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawIndexedPatches : MTLIndirectCommandTypeDrawIndexed);
 			indirectCommandBufferDescriptor.inheritPipelineState = true;
 			indirectCommandBufferDescriptor.inheritBuffers = false;
 			indirectCommandBufferDescriptor.maxVertexBufferBindCount = vertexBindCount;
@@ -145,23 +147,36 @@ namespace qMetal
 			int meshIndex = 0;
 			for(auto &it : config->meshes)
 			{
-				id <MTLArgumentEncoder> indexArgumentEncoder = [config->function->Get() newArgumentEncoderWithBufferIndex:(ICBIndexArgumentBufferArrayIndex + meshIndex)];
-				NSUInteger argumentBufferLength = indexArgumentEncoder.encodedLength;
+				id <MTLArgumentEncoder> instanceArgumentEncoder = [config->function->Get() newArgumentEncoderWithBufferIndex:(ICBInstanceArgumentBufferArrayIndex + meshIndex)];
+				NSUInteger argumentBufferLength = instanceArgumentEncoder.encodedLength;
 				
-				id <MTLBuffer> indexArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
-				indexArgumentBuffer.label = [NSString stringWithFormat:@"%@ indice argument buffer", config->name];
-				indexArgumentBuffers.push_back(indexArgumentBuffer);
+				id <MTLBuffer> instanceArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
+				instanceArgumentBuffer.label = [NSString stringWithFormat:@"%@ instance argument buffer", config->name];
+				indexArgumentBuffers.push_back(instanceArgumentBuffer);
 				
-				[indexArgumentEncoder setArgumentBuffer:indexArgumentBuffer offset:0];
+				[instanceArgumentEncoder setArgumentBuffer:instanceArgumentBuffer offset:0];
 				
-				uint32_t *indexCount = (uint32_t*)[indexArgumentEncoder constantDataAtIndex:IndirectIndexCountIndex];
-				*indexCount = it->GetConfig()->indexCount;
-				
-				[indexArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:IndirectIndexStreamIndex];
+				if (IndirectIndexStreamIndex != EmptyIndex)
+				{
+					uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:IndirectVertexIndexCountIndex];
+					*indexCount = it->GetConfig()->indexCount;
+					
+					[instanceArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:IndirectIndexStreamIndex];
+				}
+				else
+				{
+					uint32_t *vertexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:IndirectVertexIndexCountIndex];
+					*vertexCount = it->GetConfig()->vertexCount;
+				}
 				
 				if (IndirectTessellationFactorBufferIndex != EmptyIndex)
 				{
-					[indexArgumentEncoder setBuffer:it->GetTessellationFactorsBuffer() offset:0 atIndex:IndirectTessellationFactorBufferIndex];
+					[instanceArgumentEncoder setBuffer:it->GetTessellationFactorsBuffer() offset:0 atIndex:IndirectTessellationFactorBufferIndex];
+				}
+				
+				if (IndirectTessellationPatchIndexBufferIndex != EmptyIndex)
+				{
+					[instanceArgumentEncoder setBuffer:it->GetTessellationPatchIndexBuffer() offset:0 atIndex:IndirectTessellationPatchIndexBufferIndex];
 				}
 				
 				meshIndex++;
@@ -221,7 +236,12 @@ namespace qMetal
 			for(auto &it : config->meshes)
 			{
 				it->UseResources(encoder, useVertexArgumentBuffers);
-				[encoder setBuffer:indexArgumentBuffers[meshIndex] offset:0 atIndex:(ICBIndexArgumentBufferArrayIndex + meshIndex)];
+				
+				if (IndirectIndexStreamIndex != EmptyIndex || IndirectTessellationFactorBufferIndex != EmptyIndex)
+				{
+					[encoder setBuffer:indexArgumentBuffers[meshIndex] offset:0 atIndex:(ICBInstanceArgumentBufferArrayIndex + meshIndex)];
+				}
+				
 				if (useVertexArgumentBuffers)
 				{
 					[encoder setBuffer:it->GetVertexArgumentBufferForMaterial(material) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex)];
