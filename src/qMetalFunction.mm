@@ -29,15 +29,24 @@ namespace qMetal
 {
 	id <MTLLibrary> Function::sDefaultLibrary = nil;
 
-	Function::Function(NSString* name)
+	Function::Function(NSString* name, MTLFunctionConstantValues* functionConstantValues)
 	: function(nil)
 	{
 		if (sDefaultLibrary == nil)
 		{
 			sDefaultLibrary = [Device::Get() newDefaultLibrary];
 		}
-
-		function = [sDefaultLibrary newFunctionWithName:name];
+		
+		if (functionConstantValues != nil)
+		{
+			NSError* error = nil;
+			function = [sDefaultLibrary newFunctionWithName:name constantValues:functionConstantValues error:&error];
+			qASSERTM( error == nil, [error toString] );
+		}
+		else
+		{
+			function = [sDefaultLibrary newFunctionWithName:name];
+		}
 		
 #if DEBUG
 		function.label = name;

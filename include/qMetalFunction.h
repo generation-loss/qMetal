@@ -32,7 +32,7 @@ namespace qMetal
     {   
     public:
       
-        Function(NSString* name);
+        Function(NSString* name, MTLFunctionConstantValues* functionConstantValues = nil);
       
         id <MTLFunction> Get() const
         {
