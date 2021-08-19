@@ -40,17 +40,20 @@ namespace qMetal
 	
 	const int EmptyIndex = -1;
 	
+	//RPW TODO this should live on qMetalMesh or somewhere more common
 	enum eTessellationFactorMode
 	{
 		eTessellationFactorMode_Constant,
-		eTessellationFactorMode_PerTriangle
+		eTessellationFactorMode_PerPatch,
+		eTessellationFactorMode_PerPatchMultiplied
 	};
 
-    template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams = EmptyParams, int _ComputeParamsIndex = EmptyIndex, class _InstanceParams = EmptyParams, int _InstanceParamsIndex = EmptyIndex, bool _ForIndirectCommandBuffer = false>
+    template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams = EmptyParams, int _ComputeParamsIndex = EmptyIndex, class _InstanceParams = EmptyParams, int _InstanceParamsIndex = EmptyIndex>
 	class Material
     {             
     public:
 		
+		//RPW TODO this should live on qMetalMesh or somewhere more common
 		enum eTessellationIndexBufferType
 		{
 			//enum value = bytes
@@ -78,6 +81,8 @@ namespace qMetal
 			eTessellationIndexBufferType tessellationIndexBufferType;
 			eTessellationFactorMode tessellationFactorMode;
 			bool alphaToCoverage;
+			bool forIndirectCommandBuffer;
+			bool tessellated;
 			
             Config(NSString *_name)
             : name(_name)
@@ -92,6 +97,8 @@ namespace qMetal
             , tessellationIndexBufferType(eTessellationIndexBufferType_16)
 			, tessellationFactorMode(eTessellationFactorMode_Constant)
 			, alphaToCoverage(false)
+			, forIndirectCommandBuffer(false)
+			, tessellated(false)
             {
               memset(blendStates, 0, sizeof(blendStates));
               memset(computeTextures, 0, sizeof(vertexTextures));
@@ -114,6 +121,8 @@ namespace qMetal
             , tessellationIndexBufferType(config->tessellationIndexBufferType)
 			, tessellationFactorMode(config->tessellationFactorMode)
 			, alphaToCoverage(config->alphaToCoverage)
+			, forIndirectCommandBuffer(config->forIndirectCommandBuffer)
+			, tessellated(config->tessellated)
 			{
 				memcpy(&blendStates, &config->blendStates, sizeof(blendStates));
 				memcpy(&computeTextures, &config->computeTextures, sizeof(vertexTextures));
@@ -226,9 +235,10 @@ namespace qMetal
 				renderDesc.alphaToCoverageEnabled = config->alphaToCoverage;
 				
 				//TESSELLATION / COMPUTE
-				if (config->computeFunction != NULL)
+				if (config->tessellated)
 				{
 					renderDesc.tessellationControlPointIndexType = (MTLTessellationControlPointIndexType)config->tessellationIndexBufferType;
+					renderDesc.tessellationFactorStepFunction = MTLTessellationFactorStepFunctionPerPatchAndPerInstance;
 					renderDesc.tessellationOutputWindingOrder = MTLWindingCounterClockwise;
 					renderDesc.tessellationPartitionMode = MTLTessellationPartitionModeFractionalEven; 			//TODO is this what we want?
 					renderDesc.tessellationFactorFormat = MTLTessellationFactorFormatHalf; 						//This is the only option
@@ -243,7 +253,7 @@ namespace qMetal
 					renderDesc.vertexDescriptor = config->vertexDescriptor;
 				}
 				
-				renderDesc.supportIndirectCommandBuffers = _ForIndirectCommandBuffer;
+				renderDesc.supportIndirectCommandBuffers = config->forIndirectCommandBuffer;
 				
 				renderPipelineState 	= [qMetal::Device::Get() newRenderPipelineStateWithDescriptor: renderDesc error: &error];
 				
@@ -293,8 +303,7 @@ namespace qMetal
 
 				if ((_FragmentTextureIndex != EmptyIndex) && (config->fragmentFunction != NULL)) //we might be sharing a material description with fragment textures but not actually have a fragment funtion
 				{
-					id <MTLArgumentEncoder> fragmentTextureEncoder
-					= [config->fragmentFunction->Get() newArgumentEncoderWithBufferIndex:_FragmentTextureIndex];
+					id <MTLArgumentEncoder> fragmentTextureEncoder = [config->fragmentFunction->Get() newArgumentEncoderWithBufferIndex:_FragmentTextureIndex];
 					fragmentTextureBuffer = [qMetal::Device::Get() newBufferWithLength:fragmentTextureEncoder.encodedLength options:0];
 					fragmentTextureBuffer.label = [NSString stringWithFormat:@"%@ fragment textures", config->name];
 					[fragmentTextureEncoder setArgumentBuffer:fragmentTextureBuffer offset:0];
@@ -388,7 +397,7 @@ namespace qMetal
 			}
 			
 			
-			if (!_ForIndirectCommandBuffer)
+			if (!config->forIndirectCommandBuffer)
 			{
 				if (_VertexParamsIndex != EmptyIndex)
 				{

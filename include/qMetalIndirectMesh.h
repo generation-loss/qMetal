@@ -36,19 +36,21 @@ namespace qMetal
 		//command buffer kernel
 		int ICBArgumentBufferIndex,					//where the indirect command buffer argument buffer is in the kernel shader
 		int ICBComputeParamsIndex,					//where the compute params live
+		int ICBTessellationFactorsRingBufferIndex,	//where the tessellation factors ring buffer index lives
 		int ICBVertexParamsIndex,					//where the vertex params live
 		int ICBVertexTextureIndex,					//where the vertex texture live
 		class ICBVertexInstanceParams,				//type of vertex instance params
 		int ICBVertexInstanceParamsIndex,			//where the vertex instance params live
 		int ICBFragmentParamsIndex,					//where the fragment params live
 		int ICBFragmentTextureIndex,				//where the fragment texture live
-		int ICBInstanceArgumentBufferArrayIndex,	//where the index and tesselation argument buffer array lives
+		int ICBInstanceArgumentBufferArrayIndex,	//where the index and tessellation argument buffer array lives
 		int ICBVertexArgumentBufferArrayIndex,		//where the vertex argument buffer array lives
 
 		//command buffer argument buffers
 		int IndirectVertexIndexCountIndex,			//where the number of indices lives
 		int IndirectIndexStreamIndex,				//where the index buffer lives
-		int IndirectTessellationFactorBufferIndex,	//where the tesselation factor buffer lives
+		int IndirectTessellationFactorBufferIndex,	//where the tessellation factor buffer lives
+		int IndirectTessellationFactorCountIndex,	//where the tessellation factor limit lives
 		int IndirectTessellationPatchIndexBufferIndex, //where the patch index buffer livess
 
 		//mesh details
@@ -66,17 +68,20 @@ namespace qMetal
         {
             NSString*           		name;
 			Function*					function;
+			Function*					ringClearFunction;
 			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationFactorsIndex, TessellationPatchIndicesIndex>*> 	meshes;
 			NSUInteger					count;
 			
             Config(NSString* _name)
 			: name(_name)
 			, function(NULL)
+			, ringClearFunction(NULL)
             {}
 			
 			Config(Config* config, NSString* _name)
 			: name(_name)
 			, function(config->function)
+			, ringClearFunction(config->ringClearFunction)
 			, meshes(config->meshes)
 			, count(config->count)
 			{}
@@ -84,42 +89,55 @@ namespace qMetal
 		
 		IndirectMesh(Config *_config)
         : config(_config)
+        , ringClearComputePipelineState(nil)
 		{
 			qASSERTM(config->meshes.size() > 0, "Mesh config count can can not be zero");
 			qASSERTM(config->meshes.size() < 14, "Mesh config count can can not exceed %i", 29); //32 LIMIT, get based on device
 			qASSERTM(config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex == EmptyIndex), "Mesh isn't indexed but you supplied an index stream index");
 			qASSERTM(!config->meshes[0]->GetConfig()->IsIndexed() || (IndirectIndexStreamIndex != EmptyIndex), "Mesh is indexed but you didn't supply an index stream index");
+			qASSERTM(config->ringClearFunction || (ICBTessellationFactorsRingBufferIndex == EmptyIndex), "Ring buffer clear function isn't provided but you supplied a ring buffer index");
+			qASSERTM(!config->ringClearFunction || (ICBTessellationFactorsRingBufferIndex != EmptyIndex), "Ring buffer clear function provided but you didn't supply a ring buffer index");
+			
+			dimension = ceilf(sqrtf(config->count));
 			
 			// INDIRECT COMMAND BUFFER
 			
 			MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor = [[MTLIndirectCommandBufferDescriptor alloc] init];
 			
-			NSUInteger vertexBindCount = 1; //vertex streams
+			NSUInteger vertexBindCount = 10; //vertex streams
 			vertexBindCount += (MeshVertexStreamIndex == EmptyIndex) ? MeshVertexStreamCount : 1;
+			vertexBindCount += (ICBVertexParamsIndex == EmptyIndex) ? 0 : 1;
 			vertexBindCount += (ICBVertexTextureIndex == EmptyIndex) ? 0 : 1;
 			vertexBindCount += (ICBVertexInstanceParamsIndex == EmptyIndex) ? 0 : 1;
 			
-			NSUInteger fragmentBindCount = 0;
+			NSUInteger fragmentBindCount = 10;
 			fragmentBindCount += (ICBFragmentParamsIndex == EmptyIndex) ? 0 : 1;
 			fragmentBindCount += (ICBFragmentTextureIndex == EmptyIndex) ? 0 : 1;
 			
 			indirectCommandBufferDescriptor.commandTypes = IndirectIndexStreamIndex == EmptyIndex ?
-															(TessellationFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawPatches : MTLIndirectCommandTypeDraw) :
-															(TessellationFactorsIndex != EmptyIndex ? MTLIndirectCommandTypeDrawIndexedPatches : MTLIndirectCommandTypeDrawIndexed);
+															(IndirectTessellationFactorBufferIndex != EmptyIndex ? MTLIndirectCommandTypeDrawPatches : MTLIndirectCommandTypeDraw) :
+															(IndirectTessellationFactorBufferIndex != EmptyIndex ? MTLIndirectCommandTypeDrawIndexedPatches : MTLIndirectCommandTypeDrawIndexed);
 			indirectCommandBufferDescriptor.inheritPipelineState = true;
 			indirectCommandBufferDescriptor.inheritBuffers = false;
 			indirectCommandBufferDescriptor.maxVertexBufferBindCount = vertexBindCount;
 			indirectCommandBufferDescriptor.maxFragmentBufferBindCount = fragmentBindCount;
 			indirectCommandBufferDescriptor.maxKernelBufferBindCount = 0;
 			
-			indirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:indirectCommandBufferDescriptor maxCommandCount:config->count options:0];
+			indirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:indirectCommandBufferDescriptor maxCommandCount:(dimension * dimension) options:0];
 			indirectCommandBuffer.label = [NSString stringWithFormat:@"%@ indirect command buffer", config->name];
 			
 			// SET UP SOME BUFFERS
 			
+			if (ICBTessellationFactorsRingBufferIndex != EmptyIndex)
+			{
+				uint buffer = 0;
+				tessellationFactorsRingBuffer = [qMetal::Device::Get() newBufferWithBytes:&buffer length:sizeof(uint) options:0];
+				tessellationFactorsRingBuffer.label = [NSString stringWithFormat:@"%@ tessellation factors ring buffer", config->name];
+			}
+			
 			if (ICBVertexInstanceParamsIndex != EmptyIndex)
 			{
-				vertexInstanceParamsBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(ICBVertexInstanceParams) * config->count) options:0];
+				vertexInstanceParamsBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(ICBVertexInstanceParams) * (dimension * dimension)) options:0];
 				vertexInstanceParamsBuffer.label = [NSString stringWithFormat:@"%@ vertex instance params", config->name];
 			}
 			
@@ -131,6 +149,18 @@ namespace qMetal
 			if (!computePipelineState)
 			{
 				NSLog(@"Failed to created indirect command buffer compute pipeline state, error %@", error);
+			}
+			
+			// COMPUTE PIPELINE STATE FOR CLEARING RING BUFFER
+			
+			if (config->ringClearFunction != NULL)
+			{
+				ringClearComputePipelineState = [qMetal::Device::Get() newComputePipelineStateWithFunction:config->ringClearFunction->Get()
+																									 error:&error];
+				if (!ringClearComputePipelineState)
+				{
+					NSLog(@"Failed to created ring alloc compute pipeline state, error %@", error);
+				}
 			}
 			
 			//COMPUTE PIPELINE STATE ARGUMENT BUFFER
@@ -158,10 +188,12 @@ namespace qMetal
 				
 				if (IndirectIndexStreamIndex != EmptyIndex)
 				{
+					const bool isQuad = it->GetConfig()->IsQuadIndexed() && (IndirectTessellationFactorBufferIndex != EmptyIndex);
+				
 					uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:IndirectVertexIndexCountIndex];
-					*indexCount = it->GetConfig()->indexCount;
+					*indexCount = isQuad ? it->GetConfig()->quadIndexCount : it->GetConfig()->indexCount;
 					
-					[instanceArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:IndirectIndexStreamIndex];
+					[instanceArgumentEncoder setBuffer:(isQuad ? it->GetQuadIndexBuffer() : it->GetIndexBuffer()) offset:0 atIndex:IndirectIndexStreamIndex];
 				}
 				else
 				{
@@ -174,6 +206,12 @@ namespace qMetal
 					[instanceArgumentEncoder setBuffer:it->GetTessellationFactorsBuffer() offset:0 atIndex:IndirectTessellationFactorBufferIndex];
 				}
 				
+				if (IndirectTessellationFactorCountIndex != EmptyIndex)
+				{
+					uint32_t *factorCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:IndirectTessellationFactorCountIndex];
+					*factorCount = it->GetTessellationFactorsCount();
+				}
+				
 				if (IndirectTessellationPatchIndexBufferIndex != EmptyIndex)
 				{
 					[instanceArgumentEncoder setBuffer:it->GetTessellationPatchIndexBuffer() offset:0 atIndex:IndirectTessellationPatchIndexBufferIndex];
@@ -184,13 +222,28 @@ namespace qMetal
 			
 			//COMPUTE PIPELINE THREADGROUPS
 			
-			threadsPerGrid = MTLSizeMake(config->count, 1, 1);
-			threadsPerThreadgroup = MTLSizeMake(computePipelineState.maxTotalThreadsPerThreadgroup, 1, 1);
+			threadsPerGrid = MTLSizeMake(dimension, dimension, 1);
+			threadsPerThreadgroup = MTLSizeMake(computePipelineState.threadExecutionWidth, computePipelineState.maxTotalThreadsPerThreadgroup / computePipelineState.threadExecutionWidth, 1);
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-		void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		void Reset()
 		{
+			//TODO could pass blit encoder in to collapse
+			id<MTLBlitCommandEncoder> resetBlitEncoder = qMetal::Device::BlitEncoder(@"Indirect Command Buffer Reset");
+			[resetBlitEncoder resetCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
+			[resetBlitEncoder endEncoding];
+		}
+		
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+		void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
+		{
+			if (ringClearComputePipelineState != nil)
+			{
+				[encoder setComputePipelineState:ringClearComputePipelineState];
+				[encoder setBuffer:tessellationFactorsRingBuffer offset:0 atIndex:ICBTessellationFactorsRingBufferIndex];
+				[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
+			}
+		
 			[encoder setComputePipelineState:computePipelineState];
 			
 			[encoder useResource:indirectCommandBuffer usage:MTLResourceUsageWrite];
@@ -200,6 +253,11 @@ namespace qMetal
 			if (ICBComputeParamsIndex != EmptyIndex)
 			{
 				[encoder setBuffer:material->CurrentFrameComputeParamsBuffer() offset:0 atIndex:ICBComputeParamsIndex];
+			}
+			
+			if (ICBTessellationFactorsRingBufferIndex != EmptyIndex)
+			{
+				[encoder setBuffer:tessellationFactorsRingBuffer offset:0 atIndex:ICBTessellationFactorsRingBufferIndex];
 			}
 			
 			if (ICBVertexParamsIndex != EmptyIndex)
@@ -268,8 +326,8 @@ namespace qMetal
 			[blitEncoder endEncoding];
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
         {
 			if (ICBVertexInstanceParamsIndex != EmptyIndex)
 			{
@@ -292,10 +350,13 @@ namespace qMetal
 		id<MTLIndirectCommandBuffer> 	indirectCommandBuffer;
 		
 		id <MTLComputePipelineState> 	computePipelineState;
+		id <MTLComputePipelineState> 	ringClearComputePipelineState;
+        NSInteger						dimension;
 		MTLSize 						threadsPerGrid;
 		MTLSize 						threadsPerThreadgroup;
 		
 		id <MTLBuffer> 					commandBufferArgumentBuffer;
+		id <MTLBuffer> 					tessellationFactorsRingBuffer;
 		id <MTLBuffer> 					vertexInstanceParamsBuffer;
 		std::vector<id <MTLBuffer> >	indexArgumentBuffers;
     };

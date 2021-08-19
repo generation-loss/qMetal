@@ -85,8 +85,12 @@ namespace qMetal
             uint16_t					*indices16;
             uint32_t					*indices32;
             NSUInteger	      			indexCount;
+            uint16_t					*quadIndices16;
+            uint32_t					*quadIndices32;
+            NSUInteger	      			quadIndexCount;
 			bool 						tessellated;
 			eTessellationFactorMode 	tessellationFactorMode;
+			uint32_t				 	tessellationFactorMultiplier;
 			NSUInteger					tessellationInstanceCount;
             
             Config(NSString* _name)
@@ -96,7 +100,11 @@ namespace qMetal
             , indices16(NULL)
             , indices32(NULL)
             , indexCount(0)
+            , quadIndices16(NULL)
+            , quadIndices32(NULL)
+            , quadIndexCount(0)
             , tessellated(false)
+            , tessellationFactorMultiplier(1)
 			, tessellationInstanceCount(0)
             {
 				
@@ -106,14 +114,21 @@ namespace qMetal
 			{
 				return (indices16 != NULL) || (indices32 != NULL);
 			}
+			
+			bool IsQuadIndexed() const
+			{
+				return (quadIndices16 != NULL) || (quadIndices32 != NULL);
+			}
             
         } Config;
 		
         Mesh(Config *_config)
         : config(_config)
         {
+			qASSERTM(config->quadIndexCount == 0 || config->tessellated, "Can't have quad indices on mesh %s unless we're tessellated", config->name);
 			qASSERTM(config->vertexCount > 0, "Vertex count of mesh %s can can not be zero", config->name);
 			qASSERTM(!config->IsIndexed() || config->indexCount > 0, "Index count of mesh %s can can not be zero", config->name);
+			qASSERTM(!config->IsQuadIndexed() || config->quadIndexCount > 0, "Quad index count of mesh %s can can not be zero", config->name);
 			
 			for (int i = 0; i < TessellationStreamCount; ++i)
 			{
@@ -154,18 +169,41 @@ namespace qMetal
 				indexBuffer.label = [NSString stringWithFormat:@"%@ 32-bit indices", config->name];
 			}
 			
+			if (config->quadIndices16 != NULL)
+			{
+				quadIndexBuffer = [qMetal::Device::Get() newBufferWithBytes:config->quadIndices16 length:sizeof(uint16_t) * config->quadIndexCount options:0];
+				quadIndexBuffer.label = [NSString stringWithFormat:@"%@ 16-bit quad indices", config->name];
+			}
+			else if (config->quadIndices32 != NULL)
+			{
+				quadIndexBuffer = [qMetal::Device::Get() newBufferWithBytes:config->quadIndices32 length:sizeof(uint32_t) * config->quadIndexCount options:0];
+				quadIndexBuffer.label = [NSString stringWithFormat:@"%@ 32-bit quad indices", config->name];
+			}
+			
 			if (config->tessellated)
 			{
-				const NSUInteger patchCount = config->IsIndexed() ? config->indexCount / 3 : config->vertexCount / 3;
-				
-				//one for each triangle, and each tesselation factor is 8 bytes
-				NSUInteger tesselationFactorCount = (config->tessellationInstanceCount > 0) ? config->tessellationInstanceCount : 1;
-				if (config->tessellationFactorMode == eTessellationFactorMode_PerTriangle)
+				NSUInteger patchCount = config->vertexCount / 3;
+				if (config->IsQuadIndexed())
 				{
-					tesselationFactorCount *= patchCount;
+					patchCount = config->quadIndexCount / 4;
+				}
+				else if (config->IsIndexed())
+				{
+					patchCount = config->indexCount / 3;
 				}
 				
-				tessellationFactorsBuffer = [qMetal::Device::Get() newBufferWithLength:(tesselationFactorCount * sizeof(MTLTriangleTessellationFactorsHalf)) options:MTLResourceStorageModePrivate];
+				//one for each triangle, and each tesselation factor is 8 bytes
+				tessellationFactorsCount = (config->tessellationInstanceCount > 0) ? config->tessellationInstanceCount : 1;
+				if (config->tessellationFactorMode == eTessellationFactorMode_PerPatch)
+				{
+					tessellationFactorsCount *= patchCount;
+				}
+				else if (config->tessellationFactorMode == eTessellationFactorMode_PerPatchMultiplied)
+				{
+					tessellationFactorsCount = patchCount * config->tessellationFactorMultiplier;
+				}
+				
+				tessellationFactorsBuffer = [qMetal::Device::Get() newBufferWithLength:(tessellationFactorsCount * (config->IsQuadIndexed() ? sizeof(MTLQuadTessellationFactorsHalf) : sizeof(MTLTriangleTessellationFactorsHalf))) options:MTLResourceStorageModePrivate];
 				tessellationFactorsBuffer.label = [NSString stringWithFormat:@"%@ tessellation factors", config->name];
 				
 				uint tesellationPatchIndices[patchCount];
@@ -180,8 +218,8 @@ namespace qMetal
 			}
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-        void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+        void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
         {
 			qASSERT(config->tessellated);
 			
@@ -198,7 +236,7 @@ namespace qMetal
 			
 			NSUInteger width = material->IsInstanced() ? material->InstanceCount() : 1;
 			NSUInteger height = 1;
-			if (config->tessellationFactorMode == eTessellationFactorMode_PerTriangle)
+			if (config->tessellationFactorMode == eTessellationFactorMode_PerPatch)
 			{
 				height = config->indexCount / 3;
 			}
@@ -206,8 +244,8 @@ namespace qMetal
 			material->EncodeCompute(encoder, width, height);
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
         {
         	material->Encode(encoder);
 			
@@ -234,7 +272,7 @@ namespace qMetal
 				//handles instanced as well
 				NSUInteger stride = material->IsInstanced() ? 1 : 0;
 				
-				if (config->tessellationFactorMode == eTessellationFactorMode_PerTriangle)
+				if (config->tessellationFactorMode == eTessellationFactorMode_PerPatch)
 				{
 					stride *= config->indexCount / 3;
 				}
@@ -243,7 +281,11 @@ namespace qMetal
 				
 				[encoder setTessellationFactorBuffer:tessellationFactorsBuffer offset:0 instanceStride:stride];
 				
-				if (config->IsIndexed())
+				if (config->IsQuadIndexed())
+				{
+					[encoder drawIndexedPatches:4 patchStart:0 patchCount:(config->quadIndexCount / 4) patchIndexBuffer:NULL patchIndexBufferOffset:0 controlPointIndexBuffer:quadIndexBuffer controlPointIndexBufferOffset:0 instanceCount:material->InstanceCount() baseInstance:0];
+				}
+				else if (config->IsIndexed())
 				{
 					[encoder drawIndexedPatches:3 patchStart:0 patchCount:(config->indexCount / 3) patchIndexBuffer:NULL patchIndexBufferOffset:0 controlPointIndexBuffer:indexBuffer controlPointIndexBufferOffset:0 instanceCount:material->InstanceCount() baseInstance:0];
 				}
@@ -298,7 +340,11 @@ namespace qMetal
 				}
 			}
 			
-			if (config->IsIndexed())
+			if (config->IsQuadIndexed())
+			{
+				[encoder useResource:quadIndexBuffer usage:MTLResourceUsageRead];
+			}
+			else if (config->IsIndexed())
 			{
 				[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
 			}
@@ -324,15 +370,10 @@ namespace qMetal
 			{
 				[encoder useResource:indexBuffer usage:MTLResourceUsageRead];
 			}
-			
-			if (config->tessellated)
-			{
-				[encoder useResource:tessellationFactorsBuffer usage:MTLResourceUsageRead];
-			}
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-		id<MTLBuffer> GetVertexArgumentBufferForMaterial(const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+		id<MTLBuffer> GetVertexArgumentBufferForMaterial(const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
 		{
 			if (argumentBufferMap.find(material->VertexFunction()) == argumentBufferMap.end())
 			{
@@ -347,9 +388,19 @@ namespace qMetal
 			return vertexBuffers[index];
 		}
 		
+		id<MTLBuffer> GetQuadIndexBuffer()
+		{
+			return quadIndexBuffer;
+		}
+		
 		id<MTLBuffer> GetIndexBuffer()
 		{
 			return indexBuffer;
+		}
+		
+		NSUInteger GetTessellationFactorsCount()
+		{
+			return tessellationFactorsCount;
 		}
 		
 		id<MTLBuffer> GetTessellationFactorsBuffer()
@@ -369,8 +420,8 @@ namespace qMetal
 		
     private:
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex, bool _ForIndirectCommandBuffer>
-		id<MTLBuffer> CreateVertexArgumentBufferForMaterial(const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex, _ForIndirectCommandBuffer> *material)
+		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
+		id<MTLBuffer> CreateVertexArgumentBufferForMaterial(const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
 		{
 			id <MTLArgumentEncoder> argumentEncoder = [material->VertexFunction()->Get() newArgumentEncoderWithBufferIndex:VertexStreamIndex];
 			id<MTLBuffer> argumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentEncoder.encodedLength options:0];
@@ -400,8 +451,10 @@ namespace qMetal
 		id<MTLBuffer>		vertexBuffers[VertexStreamCount];
 		id<MTLBuffer>		indexBuffer;
 		
+		NSUInteger			tessellationFactorsCount;
 		id<MTLBuffer> 		tessellationFactorsBuffer;	//RPW TODO we need one per instance and need to double buffer... probably a ring buffer?
-		id <MTLBuffer>		tessellationPatchIndexBuffer; //RPW TODO necessary? Just pass in nullptr in shader seems to do the same. Remove once indirect tessellation all works.
+		id<MTLBuffer>		tessellationPatchIndexBuffer; //RPW TODO necessary? Just pass in nullptr in shader seems to do the same. Remove once indirect tessellation all works.
+		id<MTLBuffer>		quadIndexBuffer;
 		
         Config              *config;
     };
