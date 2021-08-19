@@ -51,14 +51,12 @@ namespace qMetal
 		int IndirectIndexStreamIndex,				//where the index buffer lives
 		int IndirectTessellationFactorBufferIndex,	//where the tessellation factor buffer lives
 		int IndirectTessellationFactorCountIndex,	//where the tessellation factor limit lives
-		int IndirectTessellationPatchIndexBufferIndex, //where the patch index buffer livess
 
 		//mesh details
 		int MeshVertexStreamCount,
 		int MeshVertexStreamIndex,
 		int TessellationStreamCount = 0,
-		int TessellationFactorsIndex = EmptyIndex,
-		int TessellationPatchIndicesIndex = EmptyIndex
+		int TessellationFactorsIndex = EmptyIndex
 	>
     class IndirectMesh
     {        
@@ -69,7 +67,7 @@ namespace qMetal
             NSString*           		name;
 			Function*					function;
 			Function*					ringClearFunction;
-			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationFactorsIndex, TessellationPatchIndicesIndex>*> 	meshes;
+			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationFactorsIndex>*> 	meshes;
 			NSUInteger					count;
 			
             Config(NSString* _name)
@@ -210,11 +208,6 @@ namespace qMetal
 				{
 					uint32_t *factorCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:IndirectTessellationFactorCountIndex];
 					*factorCount = it->GetTessellationFactorsCount();
-				}
-				
-				if (IndirectTessellationPatchIndexBufferIndex != EmptyIndex)
-				{
-					[instanceArgumentEncoder setBuffer:it->GetTessellationPatchIndexBuffer() offset:0 atIndex:IndirectTessellationPatchIndexBufferIndex];
 				}
 				
 				meshIndex++;

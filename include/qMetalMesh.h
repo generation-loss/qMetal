@@ -31,7 +31,7 @@ SOFTWARE.
 
 namespace qMetal
 {
-    template<int VertexStreamCount, int VertexStreamIndex = EmptyIndex, int TessellationStreamCount = 0, int TessellationFactorsIndex = EmptyIndex, int TessellationPatchIndicesIndex = EmptyIndex>
+    template<int VertexStreamCount, int VertexStreamIndex = EmptyIndex, int TessellationStreamCount = 0, int TessellationFactorsIndex = EmptyIndex>
     class Mesh
     {        
     public:
@@ -212,9 +212,6 @@ namespace qMetal
 				{
 					tesellationPatchIndices[i] = i;
 				}
-				
-				tessellationPatchIndexBuffer = [qMetal::Device::Get() newBufferWithBytes:tesellationPatchIndices length:(NSUInteger)(sizeof(uint)*patchCount) options:MTLResourceStorageModeShared];
-				tessellationPatchIndexBuffer.label = [NSString stringWithFormat:@"%@ patch index buffer", config->name];
 			}
 		}
 		
@@ -229,10 +226,6 @@ namespace qMetal
 			}
 			
 			[encoder setBuffer:tessellationFactorsBuffer offset:0 atIndex:TessellationFactorsIndex];
-			if (TessellationPatchIndicesIndex != EmptyIndex)
-			{
-				[encoder setBuffer:tessellationPatchIndexBuffer offset:0 atIndex:TessellationPatchIndicesIndex];
-			}
 			
 			NSUInteger width = material->IsInstanced() ? material->InstanceCount() : 1;
 			NSUInteger height = 1;
@@ -352,10 +345,6 @@ namespace qMetal
 			if (config->tessellated)
 			{
 				[encoder useResource:tessellationFactorsBuffer usage:MTLResourceUsageWrite];
-				if (TessellationPatchIndicesIndex != EmptyIndex)
-				{
-					[encoder useResource:tessellationPatchIndexBuffer usage:MTLResourceUsageRead];
-				}
 			}
 		}
 		
@@ -408,11 +397,6 @@ namespace qMetal
 			return tessellationFactorsBuffer;
 		}
 		
-		id<MTLBuffer> GetTessellationPatchIndexBuffer()
-		{
-			return tessellationPatchIndexBuffer;
-		}
-		
 		Config* GetConfig() const
 		{
 			return config;
@@ -453,7 +437,6 @@ namespace qMetal
 		
 		NSUInteger			tessellationFactorsCount;
 		id<MTLBuffer> 		tessellationFactorsBuffer;	//RPW TODO we need one per instance and need to double buffer... probably a ring buffer?
-		id<MTLBuffer>		tessellationPatchIndexBuffer; //RPW TODO necessary? Just pass in nullptr in shader seems to do the same. Remove once indirect tessellation all works.
 		id<MTLBuffer>		quadIndexBuffer;
 		
         Config              *config;
