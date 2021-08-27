@@ -96,7 +96,9 @@ namespace qMetal
 			qASSERTM(config->ringClearFunction || (ICBTessellationFactorsRingBufferIndex == EmptyIndex), "Ring buffer clear function isn't provided but you supplied a ring buffer index");
 			qASSERTM(!config->ringClearFunction || (ICBTessellationFactorsRingBufferIndex != EmptyIndex), "Ring buffer clear function provided but you didn't supply a ring buffer index");
 			
+			//TODO is there a more optimal size (multiple of threadgroups?) than this?
 			dimension = ceilf(sqrtf(config->count));
+			config->count = dimension * dimension;
 			
 			// INDIRECT COMMAND BUFFER
 			
