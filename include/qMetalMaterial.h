@@ -325,15 +325,13 @@ namespace qMetal
 		
 		void EncodeCompute(NSUInteger width, NSUInteger height, NSUInteger depth = 1) const
 		{
-			qMetal::Device::PushDebugGroup(config->name);
-			
 			id<MTLComputeCommandEncoder> computeEncoder = qMetal::Device::ComputeEncoder(config->name);
+			[computeEncoder pushDebugGroup:config->name];
 			
 			EncodeCompute(computeEncoder, width, height, depth);
 			
+			[computeEncoder popDebugGroup];
 			[computeEncoder endEncoding];
-			
-			qMetal::Device::PopDebugGroup();
 		}
 		
 		void EncodeCompute(id<MTLComputeCommandEncoder> encoder, NSUInteger width, NSUInteger height, NSUInteger depth = 1) const

@@ -124,7 +124,7 @@ namespace qMetal
 			indirectCommandBufferDescriptor.maxKernelBufferBindCount = 0;
 			
 			indirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:indirectCommandBufferDescriptor maxCommandCount:(dimension * dimension) options:0];
-			indirectCommandBuffer.label = [NSString stringWithFormat:@"%@ indirect command buffer", config->name];
+			indirectCommandBuffer.label = [NSString stringWithFormat:@"%@ ICB", config->name];
 			
 			// SET UP SOME BUFFERS
 			
@@ -169,7 +169,7 @@ namespace qMetal
 			NSUInteger argumentBufferLength = argumentEncoder.encodedLength;
 			
 			commandBufferArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
-			commandBufferArgumentBuffer.label = [NSString stringWithFormat:@"%@ indirect command buffer argument buffer", config->name];
+			commandBufferArgumentBuffer.label = [NSString stringWithFormat:@"%@ ICB argument buffer", config->name];
 			
 			[argumentEncoder setArgumentBuffer:commandBufferArgumentBuffer offset:0];
 			[argumentEncoder setIndirectCommandBuffer:indirectCommandBuffer atIndex:ICBArgumentBufferIndex];
@@ -224,7 +224,8 @@ namespace qMetal
 		void Reset()
 		{
 			//TODO could pass blit encoder in to collapse
-			id<MTLBlitCommandEncoder> resetBlitEncoder = qMetal::Device::BlitEncoder(@"Indirect Command Buffer Reset");
+			NSString *name = [NSString stringWithFormat:@"%@ ICB reset", config->name];
+			id<MTLBlitCommandEncoder> resetBlitEncoder = qMetal::Device::BlitEncoder(name);
 			[resetBlitEncoder resetCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
 			[resetBlitEncoder endEncoding];
 		}
@@ -232,6 +233,8 @@ namespace qMetal
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
 		void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
 		{
+			NSString *debugName = [NSString stringWithFormat:@"%@ ICB compute encode", config->name];
+			[encoder pushDebugGroup:debugName];
 			if (ringClearComputePipelineState != nil)
 			{
 				[encoder setComputePipelineState:ringClearComputePipelineState];
@@ -310,13 +313,14 @@ namespace qMetal
 			}
 			
 			[encoder dispatchThreads:threadsPerGrid threadsPerThreadgroup:threadsPerThreadgroup];
+			[encoder popDebugGroup];
 		}
 		
 		void Optimize()
 		{
 			//TODO could pass blit encoder in to collapse
-			
-			id<MTLBlitCommandEncoder> blitEncoder = qMetal::Device::BlitEncoder(@"Indirect Command Buffer Optimization");
+			NSString *name = [NSString stringWithFormat:@"%@ ICB optimization", config->name];
+			id<MTLBlitCommandEncoder> blitEncoder = qMetal::Device::BlitEncoder(name);
 			[blitEncoder optimizeIndirectCommandBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
 			[blitEncoder endEncoding];
 		}
@@ -324,6 +328,8 @@ namespace qMetal
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
         void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
         {
+			NSString *debugName = [NSString stringWithFormat:@"%@ ICB render encode", config->name];
+			[encoder pushDebugGroup:debugName];
 			if (ICBVertexInstanceParamsIndex != EmptyIndex)
 			{
 				[encoder useResource:vertexInstanceParamsBuffer usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
@@ -337,6 +343,7 @@ namespace qMetal
 			}
 			
 			[encoder executeCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
+			[encoder popDebugGroup];
         }
 		
     private:
