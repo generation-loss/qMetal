@@ -125,17 +125,17 @@ namespace qMetal
         Mesh(Config *_config)
         : config(_config)
         {
-			qASSERTM(config->quadIndexCount == 0 || config->tessellated, "Can't have quad indices on mesh %s unless we're tessellated", config->name);
-			qASSERTM(config->vertexCount > 0, "Vertex count of mesh %s can can not be zero", config->name);
-			qASSERTM(!config->IsIndexed() || config->indexCount > 0, "Index count of mesh %s can can not be zero", config->name);
-			qASSERTM(!config->IsQuadIndexed() || config->quadIndexCount > 0, "Quad index count of mesh %s can can not be zero", config->name);
+			qASSERTM(config->quadIndexCount == 0 || config->tessellated, "Can't have quad indices on mesh %s unless we're tessellated", config->name.UTF8String);
+			qASSERTM(config->vertexCount > 0, "Vertex count of mesh %s can can not be zero", config->name.UTF8String);
+			qASSERTM(!config->IsIndexed() || config->indexCount > 0, "Index count of mesh %s can can not be zero", config->name.UTF8String);
+			qASSERTM(!config->IsQuadIndexed() || config->quadIndexCount > 0, "Quad index count of mesh %s can can not be zero", config->name.UTF8String);
 			
 			for (int i = 0; i < TessellationStreamCount; ++i)
 			{
 				VertexStream &tessellationStream = config->tessellationStreams[i];
 				
-				qASSERTM(tessellationStream.type != eVertexStreamType_Unset, "Vertex stream type %i of mesh %s is unset", i, config->name)
-				qASSERTM(tessellationStream.data != NULL, "Tessellation stream data %i of mesh %s is unset", i, config->name);
+				qASSERTM(tessellationStream.type != eVertexStreamType_Unset, "Vertex stream type %i of mesh %s is unset", i, config->name.UTF8String)
+				qASSERTM(tessellationStream.data != NULL, "Tessellation stream data %i of mesh %s is unset", i, config->name.UTF8String);
 				
 				//one per factor unless specified
 				NSUInteger count = (tessellationStream.count == 0) ? (config->indexCount / 3) : tessellationStream.count;
@@ -148,8 +148,8 @@ namespace qMetal
 			{
 				VertexStream &vertexStream = config->vertexStreams[i];
 				
-				qASSERTM(vertexStream.type != eVertexStreamType_Unset, "Vertex stream type %i of mesh %s is unset", i, config->name)
-				qASSERTM(vertexStream.data != NULL, "Vertex stream data %i of mesh %s is unset", i, config->name);
+				qASSERTM(vertexStream.type != eVertexStreamType_Unset, "Vertex stream type %i of mesh %s is unset", i, config->name.UTF8String)
+				qASSERTM(vertexStream.data != NULL, "Vertex stream data %i of mesh %s is unset", i, config->name.UTF8String);
 				
 				//one per vertex unless specified
 				NSUInteger count = (vertexStream.count == 0) ? config->vertexCount : vertexStream.count;
