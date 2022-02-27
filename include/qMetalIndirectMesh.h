@@ -221,7 +221,7 @@ namespace qMetal
 			threadsPerThreadgroup = MTLSizeMake(computePipelineState.threadExecutionWidth, computePipelineState.maxTotalThreadsPerThreadgroup / computePipelineState.threadExecutionWidth, 1);
 		}
 		
-		void Reset()
+		void Reset() const
 		{
 			//TODO could pass blit encoder in to collapse
 			NSString *name = [NSString stringWithFormat:@"%@ ICB reset", config->name];
@@ -316,7 +316,7 @@ namespace qMetal
 			[encoder popDebugGroup];
 		}
 		
-		void Optimize()
+		void Optimize() const
 		{
 			//TODO could pass blit encoder in to collapse
 			NSString *name = [NSString stringWithFormat:@"%@ ICB optimization", config->name];
