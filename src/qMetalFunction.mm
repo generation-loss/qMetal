@@ -41,7 +41,7 @@ namespace qMetal
 		{
 			NSError* error = nil;
 			function = [sDefaultLibrary newFunctionWithName:name constantValues:functionConstantValues error:&error];
-			qASSERTM( error == nil, [error toString] );
+			qASSERTM( error == nil, "" );
 		}
 		else
 		{

@@ -78,7 +78,7 @@ namespace qMetal
 			
 			if (mColourResolveTexture[i] != NULL)
 			{
-				qWARNING(mColourTexture[i]->GetConfig()->memoryless, "Colour texture %i resolves out, but isn't memoryless", i);
+				qWARNING(mColourTexture[i]->GetConfig()->storage == Texture::eStorage_Memoryless, "Colour texture %i resolves out, but isn't memoryless", i);
 				attachment.resolveTexture = mColourResolveTexture[i]->MTLTexture();
 				attachment.storeAction = MTLStoreActionMultisampleResolve;
 			}
@@ -130,7 +130,7 @@ namespace qMetal
 			
 			if (mDepthResolveTexture != NULL)
 			{
-				qWARNING(mDepthResolveTexture->GetConfig()->memoryless, "Depth texture resolves out, but isn't memoryless");
+				qWARNING(mDepthResolveTexture->GetConfig()->storage == Texture::eStorage_Memoryless, "Depth texture resolves out, but isn't memoryless");
 				attachment.resolveTexture = mDepthResolveTexture->MTLTexture();
 				attachment.storeAction = MTLStoreActionMultisampleResolve;
 				attachment.depthResolveFilter = MTLMultisampleDepthResolveFilterMin;
