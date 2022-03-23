@@ -154,7 +154,7 @@ namespace qMetal
 				//one per vertex unless specified
 				NSUInteger count = (vertexStream.count == 0) ? config->vertexCount : vertexStream.count;
 				
-				vertexBuffers[i] = [qMetal::Device::Get() newBufferWithBytes:vertexStream.data length:(NSUInteger)vertexStream.type * count options:MTLResourceStorageModeShared];
+				vertexBuffers[i] = [qMetal::Device::Get() newBufferWithBytes:vertexStream.data length:(NSUInteger)vertexStream.type * count options:MTLResourceStorageModeShared]; //TODO MTLResourceStorageModePrivate via a blit?
 				vertexBuffers[i].label = [NSString stringWithFormat:@"%@ vertices %i", config->name, i];
 			}
 			
