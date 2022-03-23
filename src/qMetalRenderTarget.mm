@@ -180,7 +180,6 @@ namespace qMetal
 		qASSERTM(mEncoder == nil, "RenderTexture encoder is set; did you forget to call End()?");
 		[mEncoder pushDebugGroup:config->name];
 		mEncoder = qMetal::Device::RenderEncoder(renderPassDescriptor, config->name);
-		//qASSERTM(mEncoder != nil, "RenderTexture encoder didn't get created from renderPassDescriptor?");
 		return mEncoder;
 	}
 	
