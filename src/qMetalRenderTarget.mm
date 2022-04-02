@@ -178,8 +178,8 @@ namespace qMetal
 	id<MTLRenderCommandEncoder> RenderTarget::Begin()
 	{
 		qASSERTM(mEncoder == nil, "RenderTexture encoder is set; did you forget to call End()?");
-		[mEncoder pushDebugGroup:config->name];
 		mEncoder = qMetal::Device::RenderEncoder(renderPassDescriptor, config->name);
+		[mEncoder pushDebugGroup:config->name];
 		return mEncoder;
 	}
 	
