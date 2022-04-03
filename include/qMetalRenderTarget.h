@@ -59,7 +59,7 @@ namespace qMetal
 		struct Config
 		{
 			Config(NSString *_name)
-			: name(_name)
+			: name([_name retain])
 			, colorAttachmentCount(eColorAttachment_1)
 			, depthTextureConfig(NULL)
 			, depthTextureSamplerState(NULL)

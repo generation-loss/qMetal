@@ -122,7 +122,7 @@ namespace qMetal
 			eStorage		storage;
 			
             Config(NSString *_name)
-            : name(_name)
+            : name([_name retain])
 			, width(8)
             , height(8)
 			, depth(1)
@@ -136,7 +136,7 @@ namespace qMetal
             {}
 			
             Config(Config* config, NSString *_name)
-            : name(_name)
+            : name([_name retain])
 			, width(config->width)
             , height(config->height)
 			, depth(config->depth)
@@ -162,7 +162,7 @@ namespace qMetal
 				   eMSAA			_msaa,
 				   eStorage			_storage
 			)
-			: name(_name)
+			: name([_name retain])
             , width(_width)
             , height(_height)
 			, depth(_depth)

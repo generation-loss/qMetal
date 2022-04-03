@@ -94,7 +94,7 @@ namespace qMetal
 			NSUInteger					tessellationInstanceCount;
             
             Config(NSString* _name)
-            : name(_name)
+            : name([_name retain])
             , primitiveType(ePrimitiveType_Triangle)
             , vertexCount(0)
             , indices16(NULL)

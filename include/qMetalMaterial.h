@@ -85,7 +85,7 @@ namespace qMetal
 			bool tessellated;
 			
             Config(NSString *_name)
-            : name(_name)
+            : name([_name retain])
             , computeFunction(NULL)
             , vertexFunction(NULL)
             , fragmentFunction(NULL)

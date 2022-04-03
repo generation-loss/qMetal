@@ -71,13 +71,13 @@ namespace qMetal
 			NSUInteger					count;
 			
             Config(NSString* _name)
-			: name(_name)
+			: name([_name retain])
 			, function(NULL)
 			, ringClearFunction(NULL)
             {}
 			
 			Config(Config* config, NSString* _name)
-			: name(_name)
+			: name([_name retain])
 			, function(config->function)
 			, ringClearFunction(config->ringClearFunction)
 			, meshes(config->meshes)
