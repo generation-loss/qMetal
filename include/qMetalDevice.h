@@ -46,9 +46,10 @@ namespace qMetal
         
         uint32_t CurrentFrameIndex();
 		
-        void StartFrame();
-        id<MTLRenderCommandEncoder> Begin();
-        void Present(bool blockUntilFrameComplete = false);
+        void BeginOffScreen();
+        void EndOffScreen();
+        id<MTLRenderCommandEncoder> BeginDrawable();
+        void EndDrawable(bool blockUntilFrameComplete = false);
     }
 }
 

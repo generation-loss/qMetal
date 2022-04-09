@@ -42,11 +42,11 @@ namespace qMetal
         
         void Init(CAMetalLayer *metalLayer)
         {
+			sDevice = MTLCreateSystemDefaultDevice();
+                
             sMetalLayer             = metalLayer;
             sMetalLayer.device      = Get();
             sMetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-            //TODO?
-            //_metalLayer.drawableSize = ???
             
             sCommandQueue           = [sDevice newCommandQueue];
             sCommandQueue.label 	= @"qMetal Command Queue";
@@ -65,15 +65,12 @@ namespace qMetal
       
         id <MTLDevice> Get()
         {
-            if (sDevice == NULL)
-            {
-                sDevice = MTLCreateSystemDefaultDevice();
-            }
             return sDevice;
         }
         
 		id<MTLBlitCommandEncoder> BlitEncoder(NSString *label)
 		{
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLBlitCommandEncoder> encoder = [sCommandBuffer blitCommandEncoder];
 			encoder.label = label;
 			return encoder;
@@ -81,6 +78,7 @@ namespace qMetal
 		
 		id<MTLComputeCommandEncoder> ComputeEncoder(NSString *label)
 		{
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLComputeCommandEncoder> encoder = [sCommandBuffer computeCommandEncoder];
 			encoder.label = label;
 			return encoder;
@@ -88,6 +86,7 @@ namespace qMetal
 		
 		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor *descriptor, NSString *label)
 		{
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLRenderCommandEncoder> encoder = [sCommandBuffer renderCommandEncoderWithDescriptor:descriptor];
 			encoder.label = label;
 			return encoder;
@@ -96,6 +95,7 @@ namespace qMetal
 		void PushDebugGroup(NSString* label)
 		{
 		#if DEBUG
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			[sCommandBuffer pushDebugGroup:label];
 		#endif
 		}
@@ -103,6 +103,7 @@ namespace qMetal
 		void PopDebugGroup()
 		{
 		#if DEBUG
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			[sCommandBuffer popDebugGroup];
 		#endif
 		}
@@ -117,16 +118,32 @@ namespace qMetal
             qASSERTM(sInited, "Device isn't inited");
         }
 		
-        void StartFrame()
-        {
-			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call Present()?")
-            sCommandBuffer = [sCommandQueue commandBuffer];
-            sCommandQueue.label = [NSString stringWithFormat:@"qMetal Command Buffer for frame %i", sFrameIndex];
-		}
-        
-        id<MTLRenderCommandEncoder> Begin()
+        void BeginOffScreen()
         {
             qASSERTM(sInited, "Device isn't inited");
+			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
+			
+            sCommandBuffer = [sCommandQueue commandBuffer];
+            sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Off Screen Command Buffer for frame %i", sFrameIndex];
+		}
+		
+		void EndOffScreen()
+		{
+            qASSERTM(sInited, "Device isn't inited");
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?")
+			
+            [sCommandBuffer commit];
+            sCommandBuffer = nil;
+		}
+        
+        id<MTLRenderCommandEncoder> BeginDrawable()
+        {
+            qASSERTM(sInited, "Device isn't inited");
+			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
+			
+            sCommandBuffer = [sCommandQueue commandBuffer];
+            sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Drawable Command Buffer for frame %i", sFrameIndex];
+            
             dispatch_semaphore_wait(sInflightSemaphore, DISPATCH_TIME_FOREVER);
 			
             sDrawable = [sMetalLayer nextDrawable];
@@ -139,9 +156,11 @@ namespace qMetal
             return sRenderTarget->Begin();
         }
         
-        void Present(bool blockUntilFrameComplete)
+        void EndDrawable(bool blockUntilFrameComplete)
         {        
             qASSERTM(sInited, "Device isn't inited");
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?")
+			
             sRenderTarget->End();
 			
 			__block dispatch_semaphore_t blockSemaphore = blockUntilFrameComplete ? sSingleFrameSemaphore : sInflightSemaphore;
