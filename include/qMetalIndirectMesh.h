@@ -87,6 +87,7 @@ namespace qMetal
 		
 		IndirectMesh(Config *_config)
         : config(_config)
+        , needsReset(false)
         , ringClearComputePipelineState(nil)
 		{
 			qASSERTM(config->meshes.size() > 0, "Mesh config count can can not be zero");
@@ -223,10 +224,13 @@ namespace qMetal
 		
 		void Reset(id<MTLBlitCommandEncoder> encoder) const
 		{
-			NSString *name = [NSString stringWithFormat:@"%@ ICB Reset", config->name];
-			[encoder pushDebugGroup:name];
-			[encoder resetCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
-			[encoder popDebugGroup];
+			if (needsReset)
+			{
+				NSString *name = [NSString stringWithFormat:@"%@ ICB Reset", config->name];
+				[encoder pushDebugGroup:name];
+				[encoder resetCommandsInBuffer:indirectCommandBuffer withRange:NSMakeRange(0, config->count)];
+				[encoder popDebugGroup];
+			}
 		}
 		
 		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
@@ -313,6 +317,8 @@ namespace qMetal
 			
 			[encoder dispatchThreads:threadsPerGrid threadsPerThreadgroup:threadsPerThreadgroup];
 			[encoder popDebugGroup];
+			
+			needsReset = true;
 		}
 		
 		void Optimize(id<MTLBlitCommandEncoder> encoder) const
@@ -346,6 +352,7 @@ namespace qMetal
 		
     private:
         Config              			*config;
+        bool							needsReset;
 		
 		id<MTLIndirectCommandBuffer> 	indirectCommandBuffer;
 		
