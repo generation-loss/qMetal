@@ -123,7 +123,7 @@ namespace qMetal
             qASSERTM(sInited, "Device isn't inited");
 			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
 			
-            sCommandBuffer = [sCommandQueue commandBuffer];
+            sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Off Screen Command Buffer for frame %i", sFrameIndex];
 		}
 		
@@ -133,6 +133,7 @@ namespace qMetal
 			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?")
 			
             [sCommandBuffer commit];
+            [sCommandBuffer release];
             sCommandBuffer = nil;
 		}
         
@@ -141,7 +142,7 @@ namespace qMetal
             qASSERTM(sInited, "Device isn't inited");
 			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
 			
-            sCommandBuffer = [sCommandQueue commandBuffer];
+            sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Drawable Command Buffer for frame %i", sFrameIndex];
             
             dispatch_semaphore_wait(sInflightSemaphore, DISPATCH_TIME_FOREVER);
@@ -173,7 +174,8 @@ namespace qMetal
             
             [sCommandBuffer presentDrawable:sDrawable];
             [sCommandBuffer commit];
-            sCommandBuffer = NULL;
+            [sCommandBuffer release];
+            sCommandBuffer = nil;
             sFrameIndex = (sFrameIndex + 1) % Q_METAL_FRAMES_TO_BUFFER;
             delete(sRenderTarget);
             sRenderTarget = NULL;
