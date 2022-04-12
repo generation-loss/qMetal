@@ -130,7 +130,7 @@ namespace qMetal
 			
 			if (mDepthResolveTexture != NULL)
 			{
-				qWARNING(mDepthResolveTexture->GetConfig()->storage == Texture::eStorage_Memoryless, "Depth texture resolves out, but isn't memoryless");
+				qWARNING(mDepthTexture->GetConfig()->storage == Texture::eStorage_Memoryless, "Depth texture resolves out, but isn't memoryless");
 				attachment.resolveTexture = mDepthResolveTexture->MTLTexture();
 				attachment.storeAction = MTLStoreActionMultisampleResolve;
 				attachment.depthResolveFilter = MTLMultisampleDepthResolveFilterMin;
