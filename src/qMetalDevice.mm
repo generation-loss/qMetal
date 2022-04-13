@@ -22,6 +22,8 @@ SOFTWARE.
 
 #include "qMetal.h"
 
+#define Q_METAL_FRAMES_BETWEEN_PRINT 30
+
 namespace qMetal
 {
     namespace Device
@@ -37,6 +39,7 @@ namespace qMetal
       
         //current frame
         static uint32_t                 sFrameIndex             = 0;
+        static uint32_t					sFramePrintIndex		= 0;
         static id<MTLCommandBuffer>     sCommandBuffer          = nil;
         static id<CAMetalDrawable>      sDrawable               = nil;
         
@@ -121,7 +124,7 @@ namespace qMetal
         void BeginOffScreen()
         {
             qASSERTM(sInited, "Device isn't inited");
-			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
+			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?");
 			
             sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Off Screen Command Buffer for frame %i", sFrameIndex];
@@ -130,7 +133,18 @@ namespace qMetal
 		void EndOffScreen()
 		{
             qASSERTM(sInited, "Device isn't inited");
-			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?")
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?");
+			
+			#if DEBUG
+			if (sFramePrintIndex == 0)
+			{
+				[sCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+					NSTimeInterval CPUtime = buffer.kernelEndTime - buffer.kernelStartTime;
+					NSTimeInterval GPUtime = buffer.GPUEndTime - buffer.GPUStartTime;
+					NSLog(@"Offscreen GPU: %0.3f, CPU: %0.3f", GPUtime * 1000.0, CPUtime * 1000.0); //TODO monitor
+				}];
+			}
+			#endif
 			
             [sCommandBuffer commit];
             [sCommandBuffer release];
@@ -140,7 +154,7 @@ namespace qMetal
         id<MTLRenderCommandEncoder> BeginDrawable()
         {
             qASSERTM(sInited, "Device isn't inited");
-			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?")
+			qASSERTM(sCommandBuffer == nil, "Device CommandBuffer isn't nil; did you call EndOffScreen()?");
 			
             sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Drawable Command Buffer for frame %i", sFrameIndex];
@@ -157,22 +171,28 @@ namespace qMetal
             return sRenderTarget->Begin();
         }
         
-        void EndDrawable(bool blockUntilFrameComplete)
+        void EndAndPresentDrawable(CFTimeInterval afterMinimumDuration, bool blockUntilFrameComplete)
         {        
             qASSERTM(sInited, "Device isn't inited");
-			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?")
+			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call StartOffScreen()?");
 			
             sRenderTarget->End();
 			
 			__block dispatch_semaphore_t blockSemaphore = blockUntilFrameComplete ? sSingleFrameSemaphore : sInflightSemaphore;
 			[sCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-//				NSTimeInterval CPUtime = buffer.kernelStartTime - buffer.kernelStartTime;
-//				NSTimeInterval GPUtime = buffer.GPUEndTime - buffer.GPUStartTime;
-//				NSLog(@"GPU: %0.3f, CPU: %0.3f", GPUtime * 1000.0, CPUtime * 1000.0); //TODO monitor
+				#if DEBUG
+				if (sFramePrintIndex == 0)
+				{
+					NSTimeInterval CPUtime = buffer.kernelEndTime - buffer.kernelStartTime;
+					NSTimeInterval GPUtime = buffer.GPUEndTime - buffer.GPUStartTime;
+					NSLog(@"Onscreen GPU: %0.3f, CPU: %0.3f", GPUtime * 1000.0, CPUtime * 1000.0); //TODO monitor
+				}
+				sFramePrintIndex = (sFramePrintIndex + 1) % Q_METAL_FRAMES_BETWEEN_PRINT;
+				#endif
 				dispatch_semaphore_signal(blockSemaphore);
 			}];
             
-            [sCommandBuffer presentDrawable:sDrawable];
+            [sCommandBuffer presentDrawable:sDrawable afterMinimumDuration:afterMinimumDuration];
             [sCommandBuffer commit];
             [sCommandBuffer release];
             sCommandBuffer = nil;

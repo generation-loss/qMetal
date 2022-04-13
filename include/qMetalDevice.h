@@ -49,7 +49,7 @@ namespace qMetal
         void BeginOffScreen();
         void EndOffScreen();
         id<MTLRenderCommandEncoder> BeginDrawable();
-        void EndDrawable(bool blockUntilFrameComplete = false);
+        void EndAndPresentDrawable(CFTimeInterval afterMinimumDuration, bool blockUntilFrameComplete = false);
     }
 }
 
