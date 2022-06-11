@@ -357,6 +357,19 @@ namespace qMetal
 				[encoder setBuffer:computeParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:_ComputeParamsIndex];
 			}
 		
+			//TODO textures into an argument buffer
+			for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
+            {
+                if (config->computeTextures[i] != NULL)
+                {
+					config->computeTextures[i]->EncodeCompute(encoder, (Texture::eUnit)i);
+				}
+			}
+        }
+		
+        void EncodeTextures(id<MTLComputeCommandEncoder> encoder) const
+		{
+			//TODO put this into an argument buffer
 			for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
             {
                 if (config->computeTextures[i] != NULL)

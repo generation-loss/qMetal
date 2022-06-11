@@ -134,6 +134,7 @@
 		5E6F8F8B21288A7500D0801B /* qMetalSamplerState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalSamplerState.h; path = include/qMetalSamplerState.h; sourceTree = "<group>"; };
 		5E754BF72084673300EB14F4 /* qMetalComputeTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalComputeTexture.h; path = include/qMetalComputeTexture.h; sourceTree = "<group>"; };
 		5E81877C19457C3500F608CD /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		5E87BBB62828739300A66C50 /* Shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Shaders; path = include/Shaders; sourceTree = "<group>"; };
 		5EBE3AC320DFDF1E00A527B1 /* qMetalTexture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalTexture.mm; path = src/qMetalTexture.mm; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* qMetal_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = qMetal_Prefix.pch; sourceTree = "<group>"; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -222,6 +223,7 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				5E87BBB62828739300A66C50 /* Shaders */,
 				D2C675A411549BB6006113D0 /* qMetal.h */,
 				D2F4B7261169CBF000BA1269 /* qMetalDevice.h */,
 				D2F4B7221169CBCB00BA1269 /* qMetalDevice.mm */,

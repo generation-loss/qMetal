@@ -31,8 +31,24 @@ SOFTWARE.
 namespace qMetal
 {
     namespace Device
-    {                
-        void Init(CAMetalLayer *layer);
+    {
+		struct Config
+		{
+			CAMetalLayer* metalLayer;
+			MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor;
+			uint32_t maxIndirectCommands; //TODO upload max and do out of bounds access if it's out of range
+			uint32_t maxIndirectDrawRanges;
+			
+			Config()
+			: metalLayer(NULL)
+			, maxIndirectCommands(0)
+			, maxIndirectDrawRanges(0)
+			, indirectCommandBufferDescriptor(nil)
+			{
+			}
+		};
+    
+        void Init(Config *config);
         void Destroy();
       
         id<MTLDevice> Get();
@@ -50,6 +66,15 @@ namespace qMetal
         void EndOffScreen();
         id<MTLRenderCommandEncoder> BeginDrawable();
         void EndAndPresentDrawable(CFTimeInterval afterMinimumDuration, bool blockUntilFrameComplete = false);
+        
+        id<MTLIndirectCommandBuffer> IndirectCommandBuffer();
+        id<MTLBuffer> IndirectRangeBuffer();
+        id<MTLBuffer> IndirectRangeLengthBuffer();
+        uint32_t NextIndirectRangeOffset();
+                
+		void ResetIndirectCommandBuffer();
+		void InitIndirectCommandBuffer(id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer);
+		void ExecuteIndirectCommandBuffer(id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset);
     }
 }
 

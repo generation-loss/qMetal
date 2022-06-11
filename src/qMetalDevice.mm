@@ -27,41 +27,88 @@ SOFTWARE.
 namespace qMetal
 {
     namespace Device
-    {   
-        static bool                     sInited                 = false;
-        static CAMetalLayer*            sMetalLayer             = NULL;
-        static id <MTLDevice>           sDevice                 = nil;
-        static id <MTLCommandQueue>     sCommandQueue           = nil;
-        static RenderTarget*            sRenderTarget           = NULL;
-        static RenderTarget::Config*    sRenderTargetConfig     = NULL;
-		static dispatch_semaphore_t     sInflightSemaphore;
-		static dispatch_semaphore_t     sSingleFrameSemaphore;
+    {
+		static Config*						config							= NULL;
+    			
+        static bool                     	sInited                 		= false;
+        static id <MTLDevice>           	sDevice                 		= nil;
+        static id <MTLCommandQueue>     	sCommandQueue           		= nil;
+        static RenderTarget*            	sRenderTarget           		= NULL;
+        static RenderTarget::Config*    	sRenderTargetConfig     		= NULL;
+		static dispatch_semaphore_t     	sInflightSemaphore;
+		static dispatch_semaphore_t     	sSingleFrameSemaphore;
+		
+		//indirect command buffer pool
+		static id<MTLIndirectCommandBuffer>	sIndirectCommandBuffer;
+		static id<MTLBuffer>				sIndirectRangeBuffer;
+		static id<MTLBuffer>				sIndirectLengthBuffer;
+		static uint32_t						sNextIndirectRangeOffset = 0;
+		static Function*					sIndirectResetFunction;
+		static id<MTLComputePipelineState>	sIndirectResetComputePiplineState;
+		static Function*					sIndirectInitFunction;
+		static id<MTLComputePipelineState>	sIndirectInitComputePiplineState;
       
         //current frame
-        static uint32_t                 sFrameIndex             = 0;
-        static uint32_t					sFramePrintIndex		= 0;
-        static id<MTLCommandBuffer>     sCommandBuffer          = nil;
-        static id<CAMetalDrawable>      sDrawable               = nil;
+        static uint32_t                 	sFrameIndex            			= 0;
+        static uint32_t						sFramePrintIndex				= 0;
+        static id<MTLCommandBuffer>     	sCommandBuffer         			= nil;
+        static id<CAMetalDrawable>      	sDrawable              			= nil;
         
-        void Init(CAMetalLayer *metalLayer)
+        void Init(Config *_config)
         {
+			config = _config;
+        
 			sDevice = MTLCreateSystemDefaultDevice();
                 
-            sMetalLayer             = metalLayer;
-            sMetalLayer.device      = Get();
-            sMetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+            config->metalLayer.device = Get();
+            config->metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
             
-            sCommandQueue           = [sDevice newCommandQueue];
-            sCommandQueue.label 	= @"qMetal Command Queue";
-            
-            sRenderTargetConfig 	= new RenderTarget::Config(@"Framebuffer");
+            sCommandQueue = [sDevice newCommandQueue];
+            sCommandQueue.label = @"qMetal Command Queue";
+            		
+            sRenderTargetConfig = new RenderTarget::Config(@"Framebuffer");
 			
 			//TODO do we need to clear?
             sRenderTargetConfig->clearAction[RenderTarget::eColorAttachment_0] = RenderTarget::eClearAction_Clear;
             sRenderTargetConfig->clearColour[RenderTarget::eColorAttachment_0] = qRGBA32f_White;
 			
-			sInflightSemaphore 		= dispatch_semaphore_create(Q_METAL_FRAMES_TO_BUFFER - 1);
-			sSingleFrameSemaphore 	= dispatch_semaphore_create(0);
+			sInflightSemaphore = dispatch_semaphore_create(Q_METAL_FRAMES_TO_BUFFER - 1);
+			sSingleFrameSemaphore = dispatch_semaphore_create(0);
+			
+			NSUInteger dimension = ceilf(sqrtf(config->maxIndirectCommands));
+			config->maxIndirectCommands = dimension * dimension;
+			
+			qASSERTM(config->maxIndirectCommands == 0 || config->maxIndirectDrawRanges != 0, "Specified a value for one of maxIndirectCommands and maxIndirectDraw commands without sepecifying the other");
+		
+			if (config->maxIndirectCommands > 0)
+			{
+				sIndirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:config->indirectCommandBufferDescriptor maxCommandCount:config->maxIndirectCommands options:0];
+				sIndirectCommandBuffer.label = @"Global Indirect Command Buffer";
+			}
+			
+			if (config->maxIndirectDrawRanges > 0)
+			{
+				sIndirectRangeBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(MTLIndirectCommandBufferExecutionRange) * config->maxIndirectDrawRanges) options:0];
+				sIndirectRangeBuffer.label = @"Global Indirect Range Buffer";
+			}
+			
+			{
+				NSError* error;
+				
+				sIndirectLengthBuffer = nil;
+            
+				sNextIndirectRangeOffset = 0;
+            
+				sIndirectResetFunction = new Function(@"qMetalIndirectResetShader");
+				sIndirectResetComputePiplineState = [qMetal::Device::Get() newComputePipelineStateWithFunction:sIndirectResetFunction->Get()
+																									 error:&error];
+				qASSERT(sIndirectResetComputePiplineState != nil);
+            
+				sIndirectInitFunction = new Function(@"qMetalIndirectInitShader");
+				sIndirectInitComputePiplineState = [qMetal::Device::Get() newComputePipelineStateWithFunction:sIndirectInitFunction->Get()
+																									 error:&error];
+				qASSERT(sIndirectInitComputePiplineState != nil);
+			}
             
             sInited = true;
         }
@@ -128,6 +175,8 @@ namespace qMetal
 			
             sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Off Screen Command Buffer for frame %i", sFrameIndex];
+            
+            ResetIndirectCommandBuffer(); //TODO make sure this is only called once per frame
 		}
 		
 		void EndOffScreen()
@@ -161,7 +210,7 @@ namespace qMetal
             
             dispatch_semaphore_wait(sInflightSemaphore, DISPATCH_TIME_FOREVER);
 			
-            sDrawable = [sMetalLayer nextDrawable];
+            sDrawable = [config->metalLayer nextDrawable];
             
             //update our render target config with the current drawable colour texture, then create a render target (lightweight as no textures are allocated) to get our renderPassDescriptor / encoder
             //TODO this is a leak
@@ -205,5 +254,60 @@ namespace qMetal
 				dispatch_semaphore_wait(sSingleFrameSemaphore, DISPATCH_TIME_FOREVER);
 			}
         }
+        
+        id<MTLIndirectCommandBuffer> IndirectCommandBuffer()
+        {
+			return sIndirectCommandBuffer;
+		}
+        
+        id<MTLBuffer> IndirectRangeBuffer()
+        {
+			return sIndirectRangeBuffer;
+		}
+		
+        id<MTLBuffer> IndirectRangeLengthBuffer()
+        {
+			assert(sNextIndirectRangeOffset != 0);
+			assert(sIndirectLengthBuffer != nil);
+			return sIndirectLengthBuffer;
+		}
+        
+        uint32_t NextIndirectRangeOffset()
+        {
+			assert(sNextIndirectRangeOffset < config->maxIndirectDrawRanges);
+			
+			//Update indirect length buffer
+			[sIndirectLengthBuffer release];
+			sIndirectLengthBuffer = [qMetal::Device::Get() newBufferWithBytes:&sNextIndirectRangeOffset length:sizeof(sNextIndirectRangeOffset) options:0];
+			sIndirectLengthBuffer.label = @"Global Indirect Length Buffer";
+			
+			return sNextIndirectRangeOffset++;
+		}
+        
+        void ResetIndirectCommandBuffer()
+        {
+			id<MTLComputeCommandEncoder> encoder =  ComputeEncoder(@"Indirect Command Buffer Reset");
+			[encoder setComputePipelineState:sIndirectResetComputePiplineState];
+			[encoder setBuffer:IndirectRangeBuffer() offset:0 atIndex:0];
+			[encoder setBuffer:IndirectRangeLengthBuffer() offset:0 atIndex:1];
+			[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
+			[encoder endEncoding];
+		}
+        
+        void InitIndirectCommandBuffer(id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer)
+        {
+			[encoder pushDebugGroup:@"Indirect Command Buffer Init"];
+			[encoder setComputePipelineState:sIndirectInitComputePiplineState];
+			[encoder setBuffer:IndirectRangeBuffer() 		offset:0 atIndex:0];
+			[encoder setBuffer:IndirectRangeLengthBuffer() 	offset:0 atIndex:1];
+			[encoder setBuffer:rangeOffsetBuffer 			offset:0 atIndex:2];
+			[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
+			[encoder popDebugGroup];
+		}
+		
+		void ExecuteIndirectCommandBuffer(id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset)
+		{
+			[encoder executeCommandsInBuffer:IndirectCommandBuffer() indirectBuffer:IndirectRangeBuffer() indirectBufferOffset:(indirectRangeOffset * sizeof(MTLIndirectCommandBufferExecutionRange))];
+		}
     }
 }
