@@ -38,7 +38,9 @@ namespace qMetal
 	{
 	} EmptyParams;
 	
-	const int EmptyIndex = -1;
+	typedef int32_t ParamIndex;
+	
+	const ParamIndex EmptyIndex = -1;
 	
 	//RPW TODO this should live on qMetalMesh or somewhere more common
 	enum eTessellationFactorMode
@@ -48,7 +50,7 @@ namespace qMetal
 		eTessellationFactorMode_PerPatchMultiplied
 	};
 
-    template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams = EmptyParams, int _ComputeParamsIndex = EmptyIndex, class _InstanceParams = EmptyParams, int _InstanceParamsIndex = EmptyIndex>
+    template<class _VertexParams, class _FragmentParams, class _ComputeParams = EmptyParams, class _InstanceParams = EmptyParams>
 	class Material
     {             
     public:
@@ -67,6 +69,12 @@ namespace qMetal
             const Function *computeFunction;
             const Function *vertexFunction;
             const Function *fragmentFunction;
+            ParamIndex vertexTextureIndex;
+            ParamIndex vertexParamsIndex;
+            ParamIndex fragmentTextureIndex;
+            ParamIndex fragmentParamsIndex;
+            ParamIndex computeParamsIndex;
+            ParamIndex instanceParamsIndex;
             MTLVertexDescriptor* vertexDescriptor;
             BlendState *blendStates[RenderTarget::eColorAttachment_Count];
             DepthStencilState *depthStencilState;
@@ -89,6 +97,12 @@ namespace qMetal
             , computeFunction(NULL)
             , vertexFunction(NULL)
             , fragmentFunction(NULL)
+            , vertexTextureIndex(EmptyIndex)
+            , vertexParamsIndex(EmptyIndex)
+            , fragmentTextureIndex(EmptyIndex)
+            , fragmentParamsIndex(EmptyIndex)
+            , computeParamsIndex(EmptyIndex)
+            , instanceParamsIndex(EmptyIndex)
             , vertexDescriptor(NULL)
             , depthStencilState(NULL)
 			, stencilReferenceValue(0)
@@ -113,6 +127,12 @@ namespace qMetal
             , computeFunction(config->computeFunction)
             , vertexFunction(config->vertexFunction)
             , fragmentFunction(config->fragmentFunction)
+            , vertexTextureIndex(config->vertexTextureIndex)
+            , vertexParamsIndex(config->vertexParamsIndex)
+            , fragmentTextureIndex(config->fragmentTextureIndex)
+            , fragmentParamsIndex(config->fragmentParamsIndex)
+            , computeParamsIndex(config->computeParamsIndex)
+            , instanceParamsIndex(config->instanceParamsIndex)
             , vertexDescriptor(config->vertexDescriptor)
             , depthStencilState(config->depthStencilState)
 			, stencilReferenceValue(config->stencilReferenceValue)
@@ -187,7 +207,7 @@ namespace qMetal
 				qASSERTM((computePipelineState != nil) && (error == nil), "qMetalMaterial Failed to create compute pipeline %s with error %s", [config->name UTF8String], [[error description] UTF8String]);
 			}
 			
-			if (_ComputeParamsIndex != EmptyIndex)
+			if (config->computeParamsIndex != EmptyIndex)
 			{
 				//we may not have a function (e.g. indirect command buffers) but still want compute params buffer
 				for (uint32_t i = 0; i < Q_METAL_FRAMES_TO_BUFFER; ++i)
@@ -261,13 +281,13 @@ namespace qMetal
 				
 				for (uint32_t i = 0; i < Q_METAL_FRAMES_TO_BUFFER; ++i)
 				{
-					if (_VertexParamsIndex != EmptyIndex)
+					if (config->vertexParamsIndex != EmptyIndex)
 					{
 						vertexParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_VertexParams) options:0];
 						vertexParamsBuffer[i].label = [NSString stringWithFormat:@"%@ vertex params (frame %i)", config->name, i];
 					}
 					
-					if (_FragmentParamsIndex != EmptyIndex)
+					if (config->fragmentParamsIndex != EmptyIndex)
 					{
 						fragmentParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_FragmentParams) options:0];
 						fragmentParamsBuffer[i].label = [NSString stringWithFormat:@"%@ fragment params (frame %i)", config->name, i];
@@ -284,10 +304,10 @@ namespace qMetal
 				//note that "Writable textures are not supported within an argument buffer" (https://developer.apple.com/documentation/metal/resource_objects/about_argument_buffers?language=objc)
 				//so we don't make one for Compute Shaders, as our whole goal there is outputting one (or more) textures
 				
-				if (_VertexTextureIndex != EmptyIndex)
+				if (config->vertexTextureIndex != EmptyIndex)
 				{
 					id <MTLArgumentEncoder> vertexTextureEncoder
-					= [config->vertexFunction->Get() newArgumentEncoderWithBufferIndex:_VertexTextureIndex];
+					= [config->vertexFunction->Get() newArgumentEncoderWithBufferIndex:config->vertexTextureIndex];
 					vertexTextureBuffer = [qMetal::Device::Get() newBufferWithLength:vertexTextureEncoder.encodedLength options:0];
 					vertexTextureBuffer.label = [NSString stringWithFormat:@"%@ vertex textures", config->name];
 					[vertexTextureEncoder setArgumentBuffer:vertexTextureBuffer offset:0];
@@ -301,9 +321,9 @@ namespace qMetal
 					}
 				}
 
-				if ((_FragmentTextureIndex != EmptyIndex) && (config->fragmentFunction != NULL)) //we might be sharing a material description with fragment textures but not actually have a fragment funtion
+				if ((config->fragmentTextureIndex != EmptyIndex) && (config->fragmentFunction != NULL)) //we might be sharing a material description with fragment textures but not actually have a fragment funtion
 				{
-					id <MTLArgumentEncoder> fragmentTextureEncoder = [config->fragmentFunction->Get() newArgumentEncoderWithBufferIndex:_FragmentTextureIndex];
+					id <MTLArgumentEncoder> fragmentTextureEncoder = [config->fragmentFunction->Get() newArgumentEncoderWithBufferIndex:config->fragmentTextureIndex];
 					fragmentTextureBuffer = [qMetal::Device::Get() newBufferWithLength:fragmentTextureEncoder.encodedLength options:0];
 					fragmentTextureBuffer.label = [NSString stringWithFormat:@"%@ fragment textures", config->name];
 					[fragmentTextureEncoder setArgumentBuffer:fragmentTextureBuffer offset:0];
@@ -352,9 +372,9 @@ namespace qMetal
 		{
 			[encoder setComputePipelineState:computePipelineState];
 			
-			if (_ComputeParamsIndex != EmptyIndex)
+			if (config->computeParamsIndex != EmptyIndex)
 			{
-				[encoder setBuffer:computeParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:_ComputeParamsIndex];
+				[encoder setBuffer:computeParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:config->computeParamsIndex];
 			}
 		
 			//TODO textures into an argument buffer
@@ -383,7 +403,7 @@ namespace qMetal
 		{
 			[encoder setRenderPipelineState:renderPipelineState];
 			
-			if (_VertexTextureIndex != EmptyIndex)
+			if (config->vertexTextureIndex != EmptyIndex)
 			{
 				for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
 				{
@@ -394,7 +414,7 @@ namespace qMetal
 				}
 			}
 			
-			if ((config->fragmentFunction != NULL) && (_FragmentTextureIndex != EmptyIndex))
+			if ((config->fragmentFunction != NULL) && (config->fragmentTextureIndex != EmptyIndex))
 			{
 				//we may share a material description with + without fragment function (shadow / depth pass), so we also check for the function
 				
@@ -410,59 +430,59 @@ namespace qMetal
 			
 			if (!config->forIndirectCommandBuffer)
 			{
-				if (_VertexParamsIndex != EmptyIndex)
+				if (config->vertexParamsIndex != EmptyIndex)
 				{
-					[encoder setVertexBuffer:vertexParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:_VertexParamsIndex];
+					[encoder setVertexBuffer:vertexParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:config->vertexParamsIndex];
 				}
 				
-				if (_VertexTextureIndex != EmptyIndex)
+				if (config->vertexTextureIndex != EmptyIndex)
 				{
-					[encoder setVertexBuffer:vertexTextureBuffer offset:0 atIndex:_VertexTextureIndex];
+					[encoder setVertexBuffer:vertexTextureBuffer offset:0 atIndex:config->vertexTextureIndex];
 				}
 				
-				if (_InstanceParamsIndex != EmptyIndex)
+				if (config->instanceParamsIndex != EmptyIndex)
 				{
-					[encoder setVertexBuffer:instanceParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:_InstanceParamsIndex];
+					[encoder setVertexBuffer:instanceParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:config->instanceParamsIndex];
 				}
 				
 				if (config->fragmentFunction != NULL)
 				{
-					if (_FragmentParamsIndex != EmptyIndex)
+					if (config->fragmentParamsIndex != EmptyIndex)
 					{
-						[encoder setFragmentBuffer:fragmentParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:_FragmentParamsIndex];
+						[encoder setFragmentBuffer:fragmentParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:config->fragmentParamsIndex];
 					}
 					
-					if (_FragmentTextureIndex != EmptyIndex)
+					if (config->fragmentTextureIndex != EmptyIndex)
 					{
-						[encoder setFragmentBuffer:fragmentTextureBuffer offset:0 atIndex:_FragmentTextureIndex];
+						[encoder setFragmentBuffer:fragmentTextureBuffer offset:0 atIndex:config->fragmentTextureIndex];
 					}
 				}
 			}
 			else
 			{
-				if (_VertexParamsIndex != EmptyIndex)
+				if (config->vertexParamsIndex != EmptyIndex)
 				{
 					[encoder useResource:vertexParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
 				}
 				
-				if (_VertexTextureIndex != EmptyIndex)
+				if (config->vertexTextureIndex != EmptyIndex)
 				{
 					[encoder useResource:vertexTextureBuffer usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
 				}
 				
-				if (_InstanceParamsIndex != EmptyIndex)
+				if (config->instanceParamsIndex != EmptyIndex)
 				{
 					[encoder useResource:instanceParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
 				}
 				
 				if (config->fragmentFunction != NULL)
 				{
-					if (_FragmentParamsIndex != EmptyIndex)
+					if (config->fragmentParamsIndex != EmptyIndex)
 					{
 						[encoder useResource:fragmentParamsBuffer[qMetal::Device::CurrentFrameIndex()] usage:MTLResourceUsageRead stages:MTLRenderStageFragment];
 					}
 					
-					if (_FragmentTextureIndex != EmptyIndex)
+					if (config->fragmentTextureIndex != EmptyIndex)
 					{
 						[encoder useResource:fragmentTextureBuffer usage:MTLResourceUsageRead stages:MTLRenderStageFragment];
 					}
@@ -481,7 +501,7 @@ namespace qMetal
 		
 		id<MTLBuffer> CurrentFrameComputeParamsBuffer() const
 		{
-			qASSERTM(_ComputeParamsIndex != EmptyIndex, "No compute params index set, check material definition");
+			qASSERTM(config->computeParamsIndex != EmptyIndex, "No compute params index set, check material definition");
 			return computeParamsBuffer[qMetal::Device::CurrentFrameIndex()];
 		}
 		
@@ -492,13 +512,13 @@ namespace qMetal
 		
 		id<MTLBuffer> CurrentFrameVertexParamsBuffer() const
 		{
-			qASSERTM(_VertexParamsIndex != EmptyIndex, "No vertex params index set, check material definition");
+			qASSERTM(config->vertexParamsIndex != EmptyIndex, "No vertex params index set, check material definition");
 			return vertexParamsBuffer[qMetal::Device::CurrentFrameIndex()];
 		}
 		
 		id<MTLBuffer> VertexTextureBuffer() const
 		{
-			qASSERTM(_VertexTextureIndex != EmptyIndex, "No vertex texture index set, check material definition");
+			qASSERTM(config->vertexTextureIndex != EmptyIndex, "No vertex texture index set, check material definition");
 			return vertexTextureBuffer;
 		}
 		
@@ -516,13 +536,13 @@ namespace qMetal
 		
 		id<MTLBuffer> CurrentFrameFragmentParamsBuffer() const
 		{
-			qASSERTM(_FragmentParamsIndex != EmptyIndex, "No fragment params index set, check material definition");
+			qASSERTM(config->fragmentParamsIndex != EmptyIndex, "No fragment params index set, check material definition");
 			return fragmentParamsBuffer[qMetal::Device::CurrentFrameIndex()];
 		}
 		
 		id<MTLBuffer> FragmentTextureBuffer() const
 		{
-			qASSERTM(_FragmentTextureIndex != EmptyIndex, "No fragment texture index set, check material definition");
+			qASSERTM(config->fragmentTextureIndex != EmptyIndex, "No fragment texture index set, check material definition");
 			return fragmentTextureBuffer;
 		}
 		

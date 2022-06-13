@@ -204,8 +204,8 @@ namespace qMetal
 			threadsPerThreadgroup = MTLSizeMake(computePipelineState.threadExecutionWidth, computePipelineState.maxTotalThreadsPerThreadgroup / computePipelineState.threadExecutionWidth, 1);
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
-		void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
+		template<class _VertexParams, class _FragmentParams, class _ComputeParams, class _InstanceParams>
+		void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material)
 		{
 			if (ringClearComputePipelineState != nil)
 			{
@@ -304,8 +304,8 @@ namespace qMetal
 			[encoder popDebugGroup];
 		}
 		
-		template<class _VertexParams, int _VertexTextureIndex, int _VertexParamsIndex, class _FragmentParams, int _FragmentTextureIndex, int _FragmentParamsIndex, class _ComputeParams, int _ComputeParamsIndex, class _InstanceParams, int _InstanceParamsIndex>
-        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _VertexTextureIndex, _VertexParamsIndex, _FragmentParams, _FragmentTextureIndex, _FragmentParamsIndex, _ComputeParams, _ComputeParamsIndex, _InstanceParams, _InstanceParamsIndex> *material)
+		template<class _VertexParams, class _FragmentParams, class _ComputeParams, class _InstanceParams>
+        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material)
         {
 			NSString *debugName = [NSString stringWithFormat:@"%@ ICB render encode", config->name];
 			[encoder pushDebugGroup:debugName];
