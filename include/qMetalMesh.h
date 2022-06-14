@@ -31,10 +31,11 @@ SOFTWARE.
 
 namespace qMetal
 {
-    template<int VertexStreamCount, int VertexStreamIndex = EmptyIndex, int TessellationStreamCount = 0, int TessellationFactorsIndex = EmptyIndex>
     class Mesh
     {        
     public:
+		static constexpr uint32_t TessellationStreamLimit = 31;
+		static constexpr uint32_t VertexStreamLimit = 31;
 		
 		enum ePrimitiveType
 		{
@@ -79,8 +80,12 @@ namespace qMetal
         {
             NSString*					name;
 			ePrimitiveType				primitiveType;
-            VertexStream				tessellationStreams[TessellationStreamCount];
-            VertexStream				vertexStreams[VertexStreamCount];
+			uint32_t					tessellationStreamCount;
+			int32_t						tessellationFactorsIndex;
+			uint32_t					vertexStreamCount;
+			int32_t						vertexStreamIndex;
+            VertexStream				tessellationStreams[TessellationStreamLimit];
+            VertexStream				vertexStreams[VertexStreamLimit];
             NSUInteger	      			vertexCount;
             uint16_t					*indices16;
             uint32_t					*indices32;
@@ -96,6 +101,10 @@ namespace qMetal
             Config(NSString* _name)
             : name([_name retain])
             , primitiveType(ePrimitiveType_Triangle)
+            , vertexStreamCount(0)
+            , vertexStreamIndex(EmptyIndex)
+            , tessellationStreamCount(0)
+            , tessellationFactorsIndex(EmptyIndex)
             , vertexCount(0)
             , indices16(NULL)
             , indices32(NULL)
@@ -129,8 +138,10 @@ namespace qMetal
 			qASSERTM(config->vertexCount > 0, "Vertex count of mesh %s can can not be zero", config->name.UTF8String);
 			qASSERTM(!config->IsIndexed() || config->indexCount > 0, "Index count of mesh %s can can not be zero", config->name.UTF8String);
 			qASSERTM(!config->IsQuadIndexed() || config->quadIndexCount > 0, "Quad index count of mesh %s can can not be zero", config->name.UTF8String);
+			qASSERTM(config->vertexStreamCount < VertexStreamLimit, "Too many vertex streams");
+			qASSERTM(config->tessellationStreamCount < TessellationStreamLimit, "Too many tessellation streams");
 			
-			for (int i = 0; i < TessellationStreamCount; ++i)
+			for (int i = 0; i < config->tessellationStreamCount; ++i)
 			{
 				VertexStream &tessellationStream = config->tessellationStreams[i];
 				
@@ -144,7 +155,7 @@ namespace qMetal
 				tessellationBuffers[i].label = [NSString stringWithFormat:@"%@ tesselation buffer %i", config->name, i];
 			}
 			
-			for (int i = 0; i < VertexStreamCount; ++i)
+			for (int i = 0; i < config->vertexStreamCount; ++i)
 			{
 				VertexStream &vertexStream = config->vertexStreams[i];
 				
@@ -220,12 +231,12 @@ namespace qMetal
         {
 			qASSERT(config->tessellated);
 			
-			for (int i = 0; i < TessellationStreamCount; ++i)
+			for (int i = 0; i < config->tessellationStreamCount; ++i)
 			{
 				[encoder setBuffer:tessellationBuffers[i] offset:0 atIndex:i];
 			}
 			
-			[encoder setBuffer:tessellationFactorsBuffer offset:0 atIndex:TessellationFactorsIndex];
+			[encoder setBuffer:tessellationFactorsBuffer offset:0 atIndex:config->tessellationFactorsIndex];
 			
 			NSUInteger width = material->IsInstanced() ? material->InstanceCount() : 1;
 			NSUInteger height = 1;
@@ -242,22 +253,22 @@ namespace qMetal
         {
         	material->Encode(encoder);
 			
-			if (VertexStreamIndex == EmptyIndex)
+			if (config->vertexStreamIndex == EmptyIndex)
 			{
-				for (int i = 0; i < VertexStreamCount; ++i)
+				for (int i = 0; i < config->vertexStreamCount; ++i)
 				{
 					[encoder setVertexBuffer:vertexBuffers[i] offset:0 atIndex:i];
 				}
 			}
 			else
 			{
-				for (int i = 0; i < VertexStreamCount; ++i)
+				for (int i = 0; i < config->vertexStreamCount; ++i)
 				{
 					[encoder useResource:vertexBuffers[i] usage:MTLResourceUsageRead];
 				}
 		
 				id<MTLBuffer> argumentBuffer = GetVertexArgumentBufferForMaterial(material);
-				[encoder setVertexBuffer:argumentBuffer offset:0 atIndex:VertexStreamIndex];
+				[encoder setVertexBuffer:argumentBuffer offset:0 atIndex:config->vertexStreamIndex];
 			}
 			
 			if (config->tessellated)
@@ -315,7 +326,7 @@ namespace qMetal
 		{
 			qASSERTM(!config->tessellated, "TODO support tessellated meshes in indirect command buffers");
 
-			for (int i = 0; i < VertexStreamCount; ++i)
+			for (int i = 0; i < config->vertexStreamCount; ++i)
 			{
 				[indirectRenderCommand setVertexBuffer:vertexBuffers[i] offset:0 atIndex:i];
 			}
@@ -327,7 +338,7 @@ namespace qMetal
 		{
 			if (withVertexArgumentBuffer)
 			{
-				for (int i = 0; i < VertexStreamCount; ++i)
+				for (int i = 0; i < config->vertexStreamCount; ++i)
 				{
 					[encoder useResource:vertexBuffers[i] usage:MTLResourceUsageRead];
 				}
@@ -350,7 +361,7 @@ namespace qMetal
 		
 		void UseResources(id<MTLRenderCommandEncoder> encoder)
 		{
-			for (int i = 0; i < VertexStreamCount; ++i)
+			for (int i = 0; i < config->vertexStreamCount; ++i)
 			{
 				[encoder useResource:vertexBuffers[i] usage:MTLResourceUsageRead];
 			}
@@ -373,7 +384,7 @@ namespace qMetal
 		
 		id<MTLBuffer> GetVertexBuffer(uint index)
 		{
-			qASSERTM(index < VertexStreamCount, "index is out of range for the mesh");
+			qASSERTM(index < config->vertexStreamCount, "index is out of range for the mesh");
 			return vertexBuffers[index];
 		}
 		
@@ -407,12 +418,12 @@ namespace qMetal
 		template<class _VertexParams, class _FragmentParams, class _ComputeParams, class _InstanceParams>
 		id<MTLBuffer> CreateVertexArgumentBufferForMaterial(const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material)
 		{
-			id <MTLArgumentEncoder> argumentEncoder = [material->VertexFunction()->Get() newArgumentEncoderWithBufferIndex:VertexStreamIndex];
+			id <MTLArgumentEncoder> argumentEncoder = [material->VertexFunction()->Get() newArgumentEncoderWithBufferIndex:config->vertexStreamIndex];
 			id<MTLBuffer> argumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentEncoder.encodedLength options:0];
 			argumentBuffer.label = @"Mesh Vertex Stream Argument Buffer";
 			[argumentEncoder setArgumentBuffer:argumentBuffer offset:0];
 			
-			for (int i = 0; i < VertexStreamCount; ++i)
+			for (int i = 0; i < config->vertexStreamCount; ++i)
 			{
 				[argumentEncoder setBuffer:vertexBuffers[i] offset:0 atIndex:i];
 			}
@@ -431,8 +442,8 @@ namespace qMetal
 		typedef std::map<const Function*, id<MTLBuffer> > argumentBufferMap_t;
 		argumentBufferMap_t argumentBufferMap;
 		
-		id<MTLBuffer>		tessellationBuffers[TessellationStreamCount];
-		id<MTLBuffer>		vertexBuffers[VertexStreamCount];
+		id<MTLBuffer>		tessellationBuffers[TessellationStreamLimit];
+		id<MTLBuffer>		vertexBuffers[VertexStreamLimit];
 		id<MTLBuffer>		indexBuffer;
 		
 		NSUInteger			tessellationFactorsCount;

@@ -54,13 +54,7 @@ namespace qMetal
 		int IndirectVertexIndexCountIndex,			//where the number of indices lives
 		int IndirectIndexStreamIndex,				//where the index buffer lives
 		int IndirectTessellationFactorBufferIndex,	//where the tessellation factor buffer lives
-		int IndirectTessellationFactorCountIndex,	//where the tessellation factor limit lives
-
-		//mesh details
-		int MeshVertexStreamCount,
-		int MeshVertexStreamIndex,
-		int TessellationStreamCount = 0,
-		int TessellationFactorsIndex = EmptyIndex
+		int IndirectTessellationFactorCountIndex	//where the tessellation factor limit lives
 	>
     class IndirectMesh
     {        
@@ -68,11 +62,11 @@ namespace qMetal
 		
         typedef struct Config
         {
-            NSString*           		name;
-			Function*					function;
-			Function*					ringClearFunction;
-			std::vector<Mesh<MeshVertexStreamCount, MeshVertexStreamIndex, TessellationStreamCount, TessellationFactorsIndex>*> 	meshes;
-			NSUInteger					count;
+            NSString*           	name;
+			Function*				function;
+			Function*				ringClearFunction;
+			std::vector<Mesh*> 		meshes;
+			NSUInteger				count;
 			
             Config(NSString* _name)
 			: name([_name retain])
@@ -275,7 +269,7 @@ namespace qMetal
 				}
 			}
 
-			const bool useVertexArgumentBuffers = MeshVertexStreamIndex != EmptyIndex;
+			const bool useVertexArgumentBuffers = config->meshes[0]->GetConfig()->vertexStreamIndex != EmptyIndex;
 			int meshIndex = 0;
 			for(auto &it : config->meshes)
 			{
@@ -292,9 +286,10 @@ namespace qMetal
 				}
 				else
 				{
-					for(int streamIndex = 0; streamIndex < MeshVertexStreamCount; ++streamIndex)
+					const uint32_t vertexStreamCount = config->meshes[0]->GetConfig()->vertexStreamCount;
+					for(int streamIndex = 0; streamIndex < vertexStreamCount; ++streamIndex)
 					{
-						[encoder setBuffer:it->GetVertexBuffer(streamIndex) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex * MeshVertexStreamCount + streamIndex)];
+						[encoder setBuffer:it->GetVertexBuffer(streamIndex) offset:0 atIndex:(ICBVertexArgumentBufferArrayIndex + meshIndex * vertexStreamCount + streamIndex)];
 					}
 				}
 				meshIndex++;
