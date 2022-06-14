@@ -13,6 +13,8 @@
 		5E16F0661F6EEB3A00E7DEA3 /* qMetalCullState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0651F6EEB3A00E7DEA3 /* qMetalCullState.mm */; };
 		5E16F0681F6EF4A300E7DEA3 /* qMetalBlendState.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E16F0671F6EF4A300E7DEA3 /* qMetalBlendState.h */; };
 		5E16F06A1F6EF79A00E7DEA3 /* qMetalBlendState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E16F0691F6EF79A00E7DEA3 /* qMetalBlendState.mm */; };
+		5E220774285836CF00CACCE1 /* qMetalMesh.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E220771285836CF00CACCE1 /* qMetalMesh.mm */; };
+		5E220775285836CF00CACCE1 /* qMetalMesh.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5E220771285836CF00CACCE1 /* qMetalMesh.mm */; };
 		5E2D28DA214D681A004687A7 /* qMetalIndirectMesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */; };
 		5E4A265827F80E4900F6B6CB /* libqCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2C6752E115494E2006113D0 /* libqCore.a */; };
 		5E4A265927F80E4A00F6B6CB /* libqMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E0ABF8923625FBA00FBCDDD /* libqMath.a */; };
@@ -121,6 +123,7 @@
 		5E16F0651F6EEB3A00E7DEA3 /* qMetalCullState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalCullState.mm; path = src/qMetalCullState.mm; sourceTree = "<group>"; };
 		5E16F0671F6EF4A300E7DEA3 /* qMetalBlendState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalBlendState.h; path = include/qMetalBlendState.h; sourceTree = "<group>"; };
 		5E16F0691F6EF79A00E7DEA3 /* qMetalBlendState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalBlendState.mm; path = src/qMetalBlendState.mm; sourceTree = "<group>"; };
+		5E220771285836CF00CACCE1 /* qMetalMesh.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = qMetalMesh.mm; path = src/qMetalMesh.mm; sourceTree = "<group>"; };
 		5E2B356C1F772C6700AC68AF /* qMetalMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = qMetalMesh.h; path = include/qMetalMesh.h; sourceTree = "<group>"; };
 		5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qMetalIndirectMesh.h; path = include/qMetalIndirectMesh.h; sourceTree = "<group>"; };
 		5E4A25EA27F80A5A00F6B6CB /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
@@ -232,6 +235,7 @@
 				5E2D28D9214D681A004687A7 /* qMetalIndirectMesh.h */,
 				5E16F05D1F6EBD6C00E7DEA3 /* qMetalMaterial.h */,
 				5E2B356C1F772C6700AC68AF /* qMetalMesh.h */,
+				5E220771285836CF00CACCE1 /* qMetalMesh.mm */,
 				D2F4B5E91169B79400BA1269 /* qMetalRenderTarget.h */,
 				D2F4B5E01169B78800BA1269 /* qMetalRenderTarget.mm */,
 				D28170C01202139E003E56F0 /* qMetalTexture.h */,
@@ -452,6 +456,7 @@
 			files = (
 				5E4A26ED27FBF4D300F6B6CB /* qMetalDevice.mm in Sources */,
 				5E4A26EE27FBF4D300F6B6CB /* qMetalFunction.mm in Sources */,
+				5E220775285836CF00CACCE1 /* qMetalMesh.mm in Sources */,
 				5E4A26EF27FBF4D300F6B6CB /* qMetalRenderTarget.mm in Sources */,
 				5E4A26F027FBF4D300F6B6CB /* qMetalTexture.mm in Sources */,
 				5E4A26F127FBF4D300F6B6CB /* qMetalBlendState.mm in Sources */,
@@ -468,6 +473,7 @@
 			files = (
 				5E16F06A1F6EF79A00E7DEA3 /* qMetalBlendState.mm in Sources */,
 				5E16F0621F6EE76B00E7DEA3 /* qMetalStencilState.mm in Sources */,
+				5E220774285836CF00CACCE1 /* qMetalMesh.mm in Sources */,
 				5E16F0661F6EEB3A00E7DEA3 /* qMetalCullState.mm in Sources */,
 				D2F4B5E11169B78800BA1269 /* qMetalRenderTarget.mm in Sources */,
 				D2F4B7231169CBCB00BA1269 /* qMetalDevice.mm in Sources */,
