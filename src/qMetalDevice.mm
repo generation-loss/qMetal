@@ -82,13 +82,13 @@ namespace qMetal
 		
 			if (config->maxIndirectCommands > 0)
 			{
-				sIndirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:config->indirectCommandBufferDescriptor maxCommandCount:config->maxIndirectCommands options:0];
+				sIndirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:config->indirectCommandBufferDescriptor maxCommandCount:config->maxIndirectCommands options:MTLResourceStorageModePrivate];
 				sIndirectCommandBuffer.label = @"Global Indirect Command Buffer";
 			}
 			
 			if (config->maxIndirectDrawRanges > 0)
 			{
-				sIndirectRangeBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(MTLIndirectCommandBufferExecutionRange) * config->maxIndirectDrawRanges) options:0];
+				sIndirectRangeBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(MTLIndirectCommandBufferExecutionRange) * config->maxIndirectDrawRanges) options:MTLResourceStorageModePrivate];
 				sIndirectRangeBuffer.label = @"Global Indirect Range Buffer";
 			}
 			
