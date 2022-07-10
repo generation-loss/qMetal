@@ -46,11 +46,13 @@ namespace qMetal
 			NSUInteger				count;
 			
 			//length kernel
-			int32_t execuationRangeIndex;					//where the structure with the MTLIndirectCommandBufferExecutionRange array lives
-			int32_t execuationRangeOffsetIndex;				//the uint offset into the MTLIndirectCommandBufferExecutionRange
+			int32_t executionRangeIndex;					//where the structure with the MTLIndirectCommandBufferExecutionRange array lives
+			int32_t executionRangeOffsetIndex;				//the uint offset into the MTLIndirectCommandBufferExecutionRange
+			int32_t executionTessellationRangeIndex;		//where the structure with the MTLIndirectCommandBufferExecutionRange array lives for tessellated draws
+			int32_t executionTessellationRangeOffsetIndex;	//the uint offset into the MTLIndirectCommandBufferExecutionRange for tessellated draws
 
 			//command buffer kernel
-			int32_t argumentBufferIndex;					//where the indirect command buffer argument buffer is in the kernel shader
+			int32_t argumentBufferIndex; 					//where the indirect command buffer argument buffer is in the kernel shader
 			int32_t computeParamsIndex;						//where the compute params live
 			int32_t tessellationFactorsRingBufferIndex;		//where the tessellation factors ring buffer index lives
 			int32_t vertexParamsIndex;						//where the vertex params live
@@ -71,8 +73,10 @@ namespace qMetal
 			: name([_name retain])
 			, function(NULL)
 			, ringClearFunction(NULL)
-			, execuationRangeIndex(EmptyIndex)
-			, execuationRangeOffsetIndex(EmptyIndex)
+			, executionRangeIndex(EmptyIndex)
+			, executionRangeOffsetIndex(EmptyIndex)
+			, executionTessellationRangeIndex(EmptyIndex)
+			, executionTessellationRangeOffsetIndex(EmptyIndex)
 			, argumentBufferIndex(EmptyIndex)
 			, computeParamsIndex(EmptyIndex)
 			, tessellationFactorsRingBufferIndex(EmptyIndex)
@@ -87,7 +91,7 @@ namespace qMetal
 			, indirectIndexStreamIndex(EmptyIndex)
 			, indirectTessellationFactorBufferIndex(EmptyIndex)
 			, indirectTessellationFactorCountIndex(EmptyIndex)
-            {}
+            { }
 			
 			Config(Config* config, NSString* _name)
 			: name([_name retain])
@@ -95,8 +99,10 @@ namespace qMetal
 			, ringClearFunction(config->ringClearFunction)
 			, meshes(config->meshes)
 			, count(config->count)
-			, execuationRangeIndex(config->execuationRangeIndex)
-			, execuationRangeOffsetIndex(config->execuationRangeOffsetIndex)
+			, executionRangeIndex(config->executionRangeIndex)
+			, executionRangeOffsetIndex(config->executionRangeOffsetIndex)
+			, executionTessellationRangeIndex(config->executionTessellationRangeIndex)
+			, executionTessellationRangeOffsetIndex(config->executionTessellationRangeOffsetIndex)
 			, argumentBufferIndex(config->argumentBufferIndex)
 			, computeParamsIndex(config->computeParamsIndex)
 			, tessellationFactorsRingBufferIndex(config->tessellationFactorsRingBufferIndex)
@@ -111,7 +117,7 @@ namespace qMetal
 			, indirectIndexStreamIndex(config->indirectIndexStreamIndex)
 			, indirectTessellationFactorBufferIndex(config->indirectTessellationFactorBufferIndex)
 			, indirectTessellationFactorCountIndex(config->indirectTessellationFactorCountIndex)
-			{}
+			{ }
         } Config;
 		
 		IndirectMesh(Config *_config)
@@ -139,9 +145,16 @@ namespace qMetal
 				tessellationFactorsRingBuffer.label = [NSString stringWithFormat:@"%@ tessellation factors ring buffer", config->name];
 			}
 			
-			indirectRangeOffset = qMetal::Device::NextIndirectRangeOffset();
+			indirectRangeOffset = qMetal::Device::NextIndirectRangeOffset(Device::eIndirectCommandBufferPool_Untessellated);
 			indirectRangeOffsetBuffer = [qMetal::Device::Get() newBufferWithBytes:&indirectRangeOffset length:sizeof(uint) options:0];
 			indirectRangeOffsetBuffer.label = [NSString stringWithFormat:@"%@ indirect range offset buffer", config->name];
+			
+			if (config->tessellationFactorsRingBufferIndex != EmptyIndex)
+			{
+				indirectTessellationRangeOffset = qMetal::Device::NextIndirectRangeOffset(Device::eIndirectCommandBufferPool_Tessellated);
+				indirectTessellationRangeOffsetBuffer = [qMetal::Device::Get() newBufferWithBytes:&indirectTessellationRangeOffset length:sizeof(uint) options:0];
+				indirectTessellationRangeOffsetBuffer.label = [NSString stringWithFormat:@"%@ indirect tesselation range offset buffer", config->name];
+			}
 				
 			if (config->vertexInstanceParamsIndex != EmptyIndex)
 			{
@@ -170,17 +183,24 @@ namespace qMetal
 					NSLog(@"Failed to created ring alloc compute pipeline state, error %@", error);
 				}
 			}
-			
-			//COMPUTE PIPELINE STATE ARGUMENT BUFFER
-			
+				
 			id <MTLArgumentEncoder> argumentEncoder = [config->function->Get() newArgumentEncoderWithBufferIndex:config->argumentBufferIndex];
 			NSUInteger argumentBufferLength = argumentEncoder.encodedLength;
 			
 			commandBufferArgumentBuffer = [qMetal::Device::Get() newBufferWithLength:argumentBufferLength options:0];
-			commandBufferArgumentBuffer.label = [NSString stringWithFormat:@"%@ ICB argument buffer", config->name];
+			commandBufferArgumentBuffer.label = [NSString stringWithFormat:@"%@ ICB argument buffer pool", config->name];
 			
 			[argumentEncoder setArgumentBuffer:commandBufferArgumentBuffer offset:0];
-			[argumentEncoder setIndirectCommandBuffer:qMetal::Device::IndirectCommandBuffer() atIndex:config->argumentBufferIndex];
+			
+			//COMPUTE PIPELINE STATE ARGUMENT BUFFER
+			for(uint32_t poolIndex = 0; poolIndex < Device::eIndirectCommandBufferPool_Count; ++poolIndex)
+			{
+				if (((Device::eIndirectCommandBufferPool)poolIndex == Device::eIndirectCommandBufferPool_Tessellated) && (config->tessellationFactorsRingBufferIndex == EmptyIndex))
+				{
+					continue;
+				}
+				[argumentEncoder setIndirectCommandBuffer:qMetal::Device::IndirectCommandBuffer((Device::eIndirectCommandBufferPool)poolIndex) atIndex:poolIndex];
+			}
 			
 			int meshIndex = 0;
 			for(auto &it : config->meshes)
@@ -242,7 +262,12 @@ namespace qMetal
 				[encoder popDebugGroup];
 			}
 			
-			qMetal::Device::InitIndirectCommandBuffer(encoder, indirectRangeOffsetBuffer);
+			qMetal::Device::InitIndirectCommandBuffer(Device::eIndirectCommandBufferPool_Untessellated, encoder, indirectRangeOffsetBuffer);
+			
+			if (config->tessellationFactorsRingBufferIndex != EmptyIndex)
+			{
+				qMetal::Device::InitIndirectCommandBuffer(Device::eIndirectCommandBufferPool_Tessellated, encoder, indirectTessellationRangeOffsetBuffer);
+			}
 			
 			[encoder memoryBarrierWithScope:MTLBarrierScopeBuffers];
 			
@@ -253,13 +278,18 @@ namespace qMetal
 			
 			material->EncodeTextures(encoder);
 			
-			[encoder useResource:qMetal::Device::IndirectCommandBuffer() usage:MTLResourceUsageWrite];
-			
 			[encoder setBuffer:commandBufferArgumentBuffer offset:0 atIndex:config->argumentBufferIndex];
 			
-			[encoder setBuffer:qMetal::Device::IndirectRangeBuffer() offset:0 atIndex:config->execuationRangeIndex];
+			[encoder useResource:qMetal::Device::IndirectCommandBuffer(Device::eIndirectCommandBufferPool_Untessellated) usage:MTLResourceUsageWrite];
+			[encoder setBuffer:qMetal::Device::IndirectRangeBuffer(Device::eIndirectCommandBufferPool_Untessellated) offset:0 atIndex:config->executionRangeIndex];
+			[encoder setBuffer:indirectRangeOffsetBuffer offset:0 atIndex:config->executionRangeOffsetIndex];
 			
-			[encoder setBuffer:indirectRangeOffsetBuffer offset:0 atIndex:config->execuationRangeOffsetIndex];
+			if (config->tessellationFactorsRingBufferIndex != EmptyIndex)
+			{
+				[encoder useResource:qMetal::Device::IndirectCommandBuffer(Device::eIndirectCommandBufferPool_Tessellated) usage:MTLResourceUsageWrite];
+				[encoder setBuffer:qMetal::Device::IndirectRangeBuffer(Device::eIndirectCommandBufferPool_Tessellated) offset:0 atIndex:config->executionTessellationRangeIndex];
+				[encoder setBuffer:indirectTessellationRangeOffsetBuffer offset:0 atIndex:config->executionTessellationRangeOffsetIndex];
+			}
 			
 			if (config->computeParamsIndex != EmptyIndex)
 			{
@@ -331,7 +361,9 @@ namespace qMetal
 		}
 		
 		template<class _VertexParams, class _FragmentParams, class _ComputeParams, class _InstanceParams>
-        void Encode(id<MTLRenderCommandEncoder> encoder, const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material)
+        void Encode(id<MTLRenderCommandEncoder> encoder,
+			const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material,
+			const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *tessellatedMaterial = NULL)
         {
 			NSString *debugName = [NSString stringWithFormat:@"%@ ICB render encode", config->name];
 			[encoder pushDebugGroup:debugName];
@@ -340,14 +372,20 @@ namespace qMetal
 				[encoder useResource:vertexInstanceParamsBuffer usage:MTLResourceUsageRead stages:MTLRenderStageVertex];
 			}
 			
-			material->Encode(encoder);
-			
 			for(auto &it : config->meshes)
 			{
 				it->UseResources(encoder);
 			}
 			
-			qMetal::Device::ExecuteIndirectCommandBuffer(encoder, indirectRangeOffset);
+			material->Encode(encoder);
+			qMetal::Device::ExecuteIndirectCommandBuffer(Device::eIndirectCommandBufferPool_Untessellated, encoder, indirectRangeOffset);
+			
+			if (tessellatedMaterial)
+			{
+				qASSERTM(config->tessellationFactorsRingBufferIndex != EmptyIndex, "Trying to render with a tessellated material without providing tessellation set-up parameters")
+				tessellatedMaterial->Encode(encoder);
+				qMetal::Device::ExecuteIndirectCommandBuffer(Device::eIndirectCommandBufferPool_Tessellated, encoder, indirectTessellationRangeOffset);
+			}
 			
 			[encoder popDebugGroup];
         }
@@ -369,6 +407,9 @@ namespace qMetal
 		
 		uint32_t						indirectRangeOffset;
 		id <MTLBuffer> 					indirectRangeOffsetBuffer;
+		
+		uint32_t						indirectTessellationRangeOffset;
+		id <MTLBuffer> 					indirectTessellationRangeOffsetBuffer;
     };
 }
 

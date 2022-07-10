@@ -32,18 +32,33 @@ namespace qMetal
 {
     namespace Device
     {
+		enum eIndirectCommandBufferPool
+		{
+			eIndirectCommandBufferPool_Untessellated,
+			eIndirectCommandBufferPool_Tessellated,
+			eIndirectCommandBufferPool_Count,
+		};
+    
 		struct Config
 		{
+			typedef struct IndirectCommandBufferPoolConfig
+			{
+				uint32_t maxIndirectCommands; //TODO upload max and do out of bounds access if it's out of range
+				uint32_t maxIndirectDrawRanges;
+				MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor;
+				
+				IndirectCommandBufferPoolConfig()
+				: maxIndirectCommands(0)
+				, maxIndirectDrawRanges(0)
+				, indirectCommandBufferDescriptor(nil)
+				{ }
+			} IndirectCommandBufferPoolConfig;
+			
 			CAMetalLayer* metalLayer;
-			MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor;
-			uint32_t maxIndirectCommands; //TODO upload max and do out of bounds access if it's out of range
-			uint32_t maxIndirectDrawRanges;
+			IndirectCommandBufferPoolConfig commandBufferPoolConfig[eIndirectCommandBufferPool_Count];
 			
 			Config()
 			: metalLayer(NULL)
-			, maxIndirectCommands(0)
-			, maxIndirectDrawRanges(0)
-			, indirectCommandBufferDescriptor(nil)
 			{
 			}
 		};
@@ -67,14 +82,14 @@ namespace qMetal
         id<MTLRenderCommandEncoder> BeginDrawable();
         void EndAndPresentDrawable(CFTimeInterval afterMinimumDuration, bool blockUntilFrameComplete = false);
         
-        id<MTLIndirectCommandBuffer> IndirectCommandBuffer();
-        id<MTLBuffer> IndirectRangeBuffer();
-        id<MTLBuffer> IndirectRangeLengthBuffer();
-        uint32_t NextIndirectRangeOffset();
+        id<MTLIndirectCommandBuffer> IndirectCommandBuffer(eIndirectCommandBufferPool pool);
+        id<MTLBuffer> IndirectRangeBuffer(eIndirectCommandBufferPool pool);
+        id<MTLBuffer> IndirectRangeLengthBuffer(eIndirectCommandBufferPool pool);
+        uint32_t NextIndirectRangeOffset(eIndirectCommandBufferPool pool);
                 
-		void ResetIndirectCommandBuffer();
-		void InitIndirectCommandBuffer(id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer);
-		void ExecuteIndirectCommandBuffer(id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset);
+		void ResetIndirectCommandBuffers();
+		void InitIndirectCommandBuffer(eIndirectCommandBufferPool pool, id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer);
+		void ExecuteIndirectCommandBuffer(eIndirectCommandBufferPool pool, id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset);
     }
 }
 

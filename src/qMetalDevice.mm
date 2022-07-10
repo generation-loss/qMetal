@@ -38,11 +38,16 @@ namespace qMetal
 		static dispatch_semaphore_t     	sInflightSemaphore;
 		static dispatch_semaphore_t     	sSingleFrameSemaphore;
 		
-		//indirect command buffer pool
-		static id<MTLIndirectCommandBuffer>	sIndirectCommandBuffer;
-		static id<MTLBuffer>				sIndirectRangeBuffer;
-		static id<MTLBuffer>				sIndirectLengthBuffer;
-		static uint32_t						sNextIndirectRangeOffset = 0;
+		typedef struct IndirectCommandBufferPool
+		{
+			id<MTLIndirectCommandBuffer>	indirectCommandBuffer;
+			id<MTLBuffer>					indirectRangeBuffer;
+			id<MTLBuffer>					indirectLengthBuffer;
+			uint32_t						nextIndirectRangeOffset = 0;
+		} IndirectCommandBufferPool;
+		
+		static IndirectCommandBufferPool	sIndirectCommandBufferPool[eIndirectCommandBufferPool_Count];
+		
 		static Function*					sIndirectResetFunction;
 		static id<MTLComputePipelineState>	sIndirectResetComputePiplineState;
 		static Function*					sIndirectInitFunction;
@@ -75,29 +80,38 @@ namespace qMetal
 			sInflightSemaphore = dispatch_semaphore_create(Q_METAL_FRAMES_TO_BUFFER - 1);
 			sSingleFrameSemaphore = dispatch_semaphore_create(0);
 			
-			NSUInteger dimension = ceilf(sqrtf(config->maxIndirectCommands));
-			config->maxIndirectCommands = dimension * dimension;
-			
-			qASSERTM(config->maxIndirectCommands == 0 || config->maxIndirectDrawRanges != 0, "Specified a value for one of maxIndirectCommands and maxIndirectDraw commands without sepecifying the other");
-		
-			if (config->maxIndirectCommands > 0)
+			for(uint32_t poolIndex = 0; poolIndex < eIndirectCommandBufferPool_Count; ++poolIndex)
 			{
-				sIndirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:config->indirectCommandBufferDescriptor maxCommandCount:config->maxIndirectCommands options:MTLResourceStorageModePrivate];
-				sIndirectCommandBuffer.label = @"Global Indirect Command Buffer";
-			}
+				Config::IndirectCommandBufferPoolConfig& poolConfig = config->commandBufferPoolConfig[poolIndex];
+				if (poolConfig.indirectCommandBufferDescriptor == NULL)
+				{
+					continue;
+				}
 			
-			if (config->maxIndirectDrawRanges > 0)
-			{
-				sIndirectRangeBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(MTLIndirectCommandBufferExecutionRange) * config->maxIndirectDrawRanges) options:MTLResourceStorageModePrivate];
-				sIndirectRangeBuffer.label = @"Global Indirect Range Buffer";
+				NSUInteger dimension = ceilf(sqrtf(poolConfig.maxIndirectCommands));
+				poolConfig.maxIndirectCommands = dimension * dimension;
+				
+				qASSERTM(poolConfig.maxIndirectCommands == 0 || poolConfig.maxIndirectDrawRanges != 0, "Specified a value for one of maxIndirectCommands and maxIndirectDraw commands without sepecifying the other");
+			
+				if (poolConfig.maxIndirectCommands > 0)
+				{
+					sIndirectCommandBufferPool[poolIndex].indirectCommandBuffer = [qMetal::Device::Get() newIndirectCommandBufferWithDescriptor:poolConfig.indirectCommandBufferDescriptor maxCommandCount:poolConfig.maxIndirectCommands options:MTLResourceStorageModePrivate];
+					sIndirectCommandBufferPool[poolIndex].indirectCommandBuffer.label = [NSString stringWithFormat:@"Global Indirect Command Buffer for pool %i", poolIndex];
+				}
+				
+				if (poolConfig.maxIndirectDrawRanges > 0)
+				{
+					sIndirectCommandBufferPool[poolIndex].indirectRangeBuffer = [qMetal::Device::Get() newBufferWithLength:(sizeof(MTLIndirectCommandBufferExecutionRange) * poolConfig.maxIndirectDrawRanges) options:MTLResourceStorageModePrivate];
+					sIndirectCommandBufferPool[poolIndex].indirectRangeBuffer.label = [NSString stringWithFormat:@"Global Indirect Range Buffer for pool %i", poolIndex];
+				}
+				
+				sIndirectCommandBufferPool[poolIndex].indirectLengthBuffer = nil;
+            
+				sIndirectCommandBufferPool[poolIndex].nextIndirectRangeOffset = 0;
 			}
 			
 			{
 				NSError* error;
-				
-				sIndirectLengthBuffer = nil;
-            
-				sNextIndirectRangeOffset = 0;
             
 				sIndirectResetFunction = new Function(@"qMetalIndirectResetShader");
 				sIndirectResetComputePiplineState = [qMetal::Device::Get() newComputePipelineStateWithFunction:sIndirectResetFunction->Get()
@@ -176,7 +190,7 @@ namespace qMetal
             sCommandBuffer = [[sCommandQueue commandBuffer] retain];
             sCommandBuffer.label = [NSString stringWithFormat:@"qMetal Off Screen Command Buffer for frame %i", sFrameIndex];
             
-            ResetIndirectCommandBuffer(); //TODO make sure this is only called once per frame
+            ResetIndirectCommandBuffers(); //TODO make sure this is only called once per frame
 		}
 		
 		void EndOffScreen()
@@ -255,59 +269,67 @@ namespace qMetal
 			}
         }
         
-        id<MTLIndirectCommandBuffer> IndirectCommandBuffer()
+        id<MTLIndirectCommandBuffer> IndirectCommandBuffer(eIndirectCommandBufferPool pool)
         {
-			return sIndirectCommandBuffer;
+			return sIndirectCommandBufferPool[pool].indirectCommandBuffer;
 		}
         
-        id<MTLBuffer> IndirectRangeBuffer()
+        id<MTLBuffer> IndirectRangeBuffer(eIndirectCommandBufferPool pool)
         {
-			return sIndirectRangeBuffer;
+			return sIndirectCommandBufferPool[pool].indirectRangeBuffer;
 		}
 		
-        id<MTLBuffer> IndirectRangeLengthBuffer()
+        id<MTLBuffer> IndirectRangeLengthBuffer(eIndirectCommandBufferPool pool)
         {
-			assert(sNextIndirectRangeOffset != 0);
-			assert(sIndirectLengthBuffer != nil);
-			return sIndirectLengthBuffer;
+			assert(sIndirectCommandBufferPool[pool].nextIndirectRangeOffset != 0);
+			assert(sIndirectCommandBufferPool[pool].indirectLengthBuffer != nil);
+			return sIndirectCommandBufferPool[pool].indirectLengthBuffer;
 		}
         
-        uint32_t NextIndirectRangeOffset()
+        uint32_t NextIndirectRangeOffset(eIndirectCommandBufferPool pool)
         {
-			assert(sNextIndirectRangeOffset < config->maxIndirectDrawRanges);
+			assert(sIndirectCommandBufferPool[pool].nextIndirectRangeOffset < config->commandBufferPoolConfig[pool].maxIndirectDrawRanges);
 			
 			//Update indirect length buffer
-			[sIndirectLengthBuffer release];
-			sIndirectLengthBuffer = [qMetal::Device::Get() newBufferWithBytes:&sNextIndirectRangeOffset length:sizeof(sNextIndirectRangeOffset) options:0];
-			sIndirectLengthBuffer.label = @"Global Indirect Length Buffer";
+			[sIndirectCommandBufferPool[pool].indirectLengthBuffer release];
+			sIndirectCommandBufferPool[pool].indirectLengthBuffer = [qMetal::Device::Get() newBufferWithBytes:&sIndirectCommandBufferPool[pool].nextIndirectRangeOffset length:sizeof(sIndirectCommandBufferPool[pool].nextIndirectRangeOffset) options:0];
+			sIndirectCommandBufferPool[pool].indirectLengthBuffer.label = [NSString stringWithFormat:@"Global Indirect Length Buffer for pool %i", pool];
 			
-			return sNextIndirectRangeOffset++;
+			return sIndirectCommandBufferPool[pool].nextIndirectRangeOffset++;
 		}
         
-        void ResetIndirectCommandBuffer()
+        void ResetIndirectCommandBuffers()
         {
 			id<MTLComputeCommandEncoder> encoder =  ComputeEncoder(@"Indirect Command Buffer Reset");
 			[encoder setComputePipelineState:sIndirectResetComputePiplineState];
-			[encoder setBuffer:IndirectRangeBuffer() offset:0 atIndex:0];
-			[encoder setBuffer:IndirectRangeLengthBuffer() offset:0 atIndex:1];
-			[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
+			for(uint32_t poolIndex = 0; poolIndex < eIndirectCommandBufferPool_Count; ++poolIndex)
+			{
+				if( config->commandBufferPoolConfig[poolIndex].indirectCommandBufferDescriptor == NULL)
+				{
+					continue;
+				}
+				eIndirectCommandBufferPool pool = (eIndirectCommandBufferPool)poolIndex;
+				[encoder setBuffer:IndirectRangeBuffer(pool) offset:0 atIndex:0];
+				[encoder setBuffer:IndirectRangeLengthBuffer(pool) offset:0 atIndex:1];
+				[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
+			}
 			[encoder endEncoding];
 		}
         
-        void InitIndirectCommandBuffer(id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer)
+        void InitIndirectCommandBuffer(eIndirectCommandBufferPool pool, id<MTLComputeCommandEncoder> encoder, id<MTLBuffer> rangeOffsetBuffer)
         {
 			[encoder pushDebugGroup:@"Indirect Command Buffer Init"];
 			[encoder setComputePipelineState:sIndirectInitComputePiplineState];
-			[encoder setBuffer:IndirectRangeBuffer() 		offset:0 atIndex:0];
-			[encoder setBuffer:IndirectRangeLengthBuffer() 	offset:0 atIndex:1];
-			[encoder setBuffer:rangeOffsetBuffer 			offset:0 atIndex:2];
+			[encoder setBuffer:IndirectRangeBuffer(pool) 		offset:0 atIndex:0];
+			[encoder setBuffer:IndirectRangeLengthBuffer(pool) 	offset:0 atIndex:1];
+			[encoder setBuffer:rangeOffsetBuffer 				offset:0 atIndex:2];
 			[encoder dispatchThreads:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
 			[encoder popDebugGroup];
 		}
 		
-		void ExecuteIndirectCommandBuffer(id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset)
+		void ExecuteIndirectCommandBuffer(eIndirectCommandBufferPool pool, id<MTLRenderCommandEncoder> encoder, uint32_t indirectRangeOffset)
 		{
-			[encoder executeCommandsInBuffer:IndirectCommandBuffer() indirectBuffer:IndirectRangeBuffer() indirectBufferOffset:(indirectRangeOffset * sizeof(MTLIndirectCommandBufferExecutionRange))];
+			[encoder executeCommandsInBuffer:IndirectCommandBuffer(pool) indirectBuffer:IndirectRangeBuffer(pool) indirectBufferOffset:(indirectRangeOffset * sizeof(MTLIndirectCommandBufferExecutionRange))];
 		}
     }
 }
