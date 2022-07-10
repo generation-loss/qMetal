@@ -64,8 +64,10 @@ namespace qMetal
 			int32_t vertexArgumentBufferArrayIndex;			//where the vertex argument buffer array lives
 	
 			//command buffer argument buffers
-			int32_t indirectVertexIndexCountIndex;			//where the number of indices lives
-			int32_t indirectIndexStreamIndex;				//where the index buffer lives
+			int32_t indirectVertexIndexCountIndex;			//where the number of tri indices lives
+			int32_t indirectVertexIndexCountQuadIndex;		//where the number of quad indices lives
+			int32_t indirectIndexStreamIndex;				//where the tri index buffer lives
+			int32_t indirectIndexStreamQuadIndex;			//where the quad index buffer lives
 			int32_t indirectTessellationFactorBufferIndex;	//where the tessellation factor buffer lives
 			int32_t indirectTessellationFactorCountIndex;	//where the tessellation factor limit lives
 			
@@ -88,7 +90,9 @@ namespace qMetal
 			, instanceArgumentBufferArrayIndex(EmptyIndex)
 			, vertexArgumentBufferArrayIndex(EmptyIndex)
 			, indirectVertexIndexCountIndex(EmptyIndex)
+			, indirectVertexIndexCountQuadIndex(EmptyIndex)
 			, indirectIndexStreamIndex(EmptyIndex)
+			, indirectIndexStreamQuadIndex(EmptyIndex)
 			, indirectTessellationFactorBufferIndex(EmptyIndex)
 			, indirectTessellationFactorCountIndex(EmptyIndex)
             { }
@@ -114,7 +118,9 @@ namespace qMetal
 			, instanceArgumentBufferArrayIndex(config->instanceArgumentBufferArrayIndex)
 			, vertexArgumentBufferArrayIndex(config->vertexArgumentBufferArrayIndex)
 			, indirectVertexIndexCountIndex(config->indirectVertexIndexCountIndex)
+			, indirectVertexIndexCountQuadIndex(config->indirectVertexIndexCountQuadIndex)
 			, indirectIndexStreamIndex(config->indirectIndexStreamIndex)
+			, indirectIndexStreamQuadIndex(config->indirectIndexStreamQuadIndex)
 			, indirectTessellationFactorBufferIndex(config->indirectTessellationFactorBufferIndex)
 			, indirectTessellationFactorCountIndex(config->indirectTessellationFactorCountIndex)
 			{ }
@@ -214,14 +220,22 @@ namespace qMetal
 				
 				[instanceArgumentEncoder setArgumentBuffer:instanceArgumentBuffer offset:0];
 				
-				if (config->indirectIndexStreamIndex != EmptyIndex)
+				if (config->indirectIndexStreamIndex != EmptyIndex || config->indirectIndexStreamQuadIndex != EmptyIndex)
 				{
-					const bool isQuad = it->GetConfig()->IsQuadIndexed() && (config->indirectTessellationFactorBufferIndex != EmptyIndex);
-				
-					uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
-					*indexCount = isQuad ? it->GetConfig()->quadIndexCount : it->GetConfig()->indexCount;
-					
-					[instanceArgumentEncoder setBuffer:(isQuad ? it->GetQuadIndexBuffer() : it->GetIndexBuffer()) offset:0 atIndex:config->indirectIndexStreamIndex];
+					if (config->indirectIndexStreamIndex != EmptyIndex)
+					{
+						uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
+						*indexCount = it->GetConfig()->indexCount;
+						
+						[instanceArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:config->indirectIndexStreamIndex];
+					}
+					if (config->indirectIndexStreamQuadIndex != EmptyIndex)
+					{
+						uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountQuadIndex];
+						*indexCount = it->GetConfig()->quadIndexCount;
+						
+						[instanceArgumentEncoder setBuffer:it->GetQuadIndexBuffer() offset:0 atIndex:config->indirectIndexStreamQuadIndex];
+					}
 				}
 				else
 				{
