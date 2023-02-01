@@ -26,7 +26,7 @@ using namespace metal;
 
 kernel void qMetalIndirectResetShader(
 	device MTLIndirectCommandBufferExecutionRange* mtlrange	[[ buffer(0) ]],
-	device uint32_t *rangeLength 							[[ buffer(1) ]])
+	device uint32_t* rangeLength 							[[ buffer(1) ]])
 {
 	for(uint rangeIndex = 0; rangeIndex < *rangeLength; ++rangeIndex)
 	{

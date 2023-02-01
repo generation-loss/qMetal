@@ -121,7 +121,7 @@ namespace qMetal
 			eMSAA			msaa;
 			eStorage		storage;
 			
-            Config(NSString *_name)
+            Config(NSString* _name)
             : name([_name retain])
 			, width(8)
             , height(8)
@@ -135,7 +135,7 @@ namespace qMetal
 			, storage(eStorage_GPUOnly)
             {}
 			
-            Config(Config* config, NSString *_name)
+            Config(Config* config, NSString* _name)
             : name([_name retain])
 			, width(config->width)
             , height(config->height)
@@ -177,9 +177,9 @@ namespace qMetal
 			
         } Config;
         
-        Texture(id<MTLTexture> _texture, const SamplerState *_samplerState); //TODO this is really only for use by the device as you end up with a config-less texture; should consider making it private and device a friend
+        Texture(id<MTLTexture> _texture, const SamplerState* _samplerState); //TODO this is really only for use by the device as you end up with a config-less texture; should consider making it private and device a friend
         
-        Texture(Config *_config, SamplerState *_samplerState);
+        Texture(Config* _config, SamplerState* _samplerState);
 		
 		~Texture();
 		
@@ -191,23 +191,23 @@ namespace qMetal
 		
         id<MTLTexture> MTLTexture() const;
         
-        void Fill(uint8_t *data);
-		void Fill(float *data);
-		void Fill(half *data);
-        void Fill(qRGBA8 *data);
-        void Fill(qRGBA16f *data);
-        void Fill(qRGBA32f *data);
+        void Fill(uint8_t* data);
+		void Fill(float* data);
+		void Fill(half* data);
+        void Fill(qRGBA8* data);
+        void Fill(qRGBA16f* data);
+        void Fill(qRGBA32f* data);
         
 		float SampleFloat(qVector2 uv, NSUInteger channel = 0) const;
 		qRGBA8 SampleRGBA8(qVector2 uv) const;
 		
 		const Config* GetConfig() const;
 		const NSString* GetName() const;
-		static Texture* LoadByName(const NSString *name, const bool CPUReadable = false, const SamplerState *samplerState = SamplerState::PredefinedState(eSamplerState_LinearLinearLinear_RepeatRepeat));
+		static Texture* LoadByName(const NSString* name, const bool CPUReadable = false, const SamplerState* samplerState = SamplerState::PredefinedState(eSamplerState_LinearLinearLinear_RepeatRepeat));
         
     private:
 		
-		void Fill(void *data);
+		void Fill(void* data);
 		
 		template<typename T>
 		T Sample(qVector2 uv, float bytesPerPixel) const;

@@ -65,10 +65,10 @@ namespace qMetal
 		
         typedef struct Config
         {
-			NSString *name;
-            const Function *computeFunction;
-            const Function *vertexFunction;
-            const Function *fragmentFunction;
+			NSString* name;
+            const Function* computeFunction;
+            const Function* vertexFunction;
+            const Function* fragmentFunction;
             ParamIndex vertexTextureIndex;
             ParamIndex vertexParamsIndex;
             ParamIndex fragmentTextureIndex;
@@ -76,13 +76,13 @@ namespace qMetal
             ParamIndex computeParamsIndex;
             ParamIndex instanceParamsIndex;
             MTLVertexDescriptor* vertexDescriptor;
-            BlendState *blendStates[RenderTarget::eColorAttachment_Count];
-            DepthStencilState *depthStencilState;
+            BlendState* blendStates[RenderTarget::eColorAttachment_Count];
+            DepthStencilState* depthStencilState;
 			uint32_t stencilReferenceValue;
-            CullState *cullState;
-            const Texture *computeTextures[Texture::eUnit_Count];
-            const Texture *vertexTextures[Texture::eUnit_Count];
-            const Texture *fragmentTextures[Texture::eUnit_Count];
+            CullState* cullState;
+            const Texture* computeTextures[Texture::eUnit_Count];
+            const Texture* vertexTextures[Texture::eUnit_Count];
+            const Texture* fragmentTextures[Texture::eUnit_Count];
 			uint32_t vertexSamplers[Texture::eUnit_Count];
 			uint32_t fragmentSamplers[Texture::eUnit_Count];
 			NSUInteger instanceCount;
@@ -92,7 +92,7 @@ namespace qMetal
 			bool forIndirectCommandBuffer;
 			bool tessellated;
 			
-            Config(NSString *_name)
+            Config(NSString* _name)
             : name([_name retain])
             , computeFunction(NULL)
             , vertexFunction(NULL)
@@ -122,7 +122,7 @@ namespace qMetal
               memset(fragmentSamplers, 0, sizeof(fragmentSamplers));
             }
 			
-			Config(Config* config, NSString *name)
+			Config(Config* config, NSString* name)
             : name(name)
             , computeFunction(config->computeFunction)
             , vertexFunction(config->vertexFunction)
@@ -153,7 +153,7 @@ namespace qMetal
 			}
         } Config;
 		
-		Material(const Config *_config) :
+		Material(const Config* _config) :
 		Material(_config, Texture::ePixelFormat_Invalid, Texture::ePixelFormat_Invalid, Texture::ePixelFormat_Invalid, Texture::eMSAA_1)
 		{
 			//compute only
@@ -162,7 +162,7 @@ namespace qMetal
 			qASSERTM(config->fragmentFunction == NULL, 	"Material without render target settings must be compute");
 		}
 		
-        Material(const Config *_config, const RenderTarget *renderTarget) :
+        Material(const Config* _config, const RenderTarget* renderTarget) :
 			Material(_config,
 					 renderTarget->GetPixelFormat(),
 					 (renderTarget->DepthTexture() == NULL) ? Texture::ePixelFormat_Invalid : renderTarget->DepthTexture()->GetConfig()->pixelFormat,
@@ -170,7 +170,7 @@ namespace qMetal
 					 (renderTarget->GetConfig()->colorAttachmentCount != RenderTarget::eColorAttachment_0) ? renderTarget->ColourTexture(RenderTarget::eColorAttachment_0)->GetConfig()->msaa : (renderTarget->DepthTexture() != NULL ? renderTarget->DepthTexture()->GetConfig()->msaa : Texture::eMSAA_1))
 		 {}
 		
-		Material(const Config *_config, const Texture::ePixelFormat colourFormat, const Texture::ePixelFormat depthFormat, const Texture::ePixelFormat stencilFormat, const Texture::eMSAA msaa) :
+		Material(const Config* _config, const Texture::ePixelFormat colourFormat, const Texture::ePixelFormat depthFormat, const Texture::ePixelFormat stencilFormat, const Texture::eMSAA msaa) :
 		Material(_config,
 				(Texture::ePixelFormat[]){
 					colourFormat,
@@ -187,16 +187,16 @@ namespace qMetal
 				msaa)
 		{}
       
-		Material(const Config *_config, const Texture::ePixelFormat colourFormat[], const Texture::ePixelFormat depthFormat, const Texture::ePixelFormat stencilFormat, const Texture::eMSAA msaa)
+		Material(const Config* _config, const Texture::ePixelFormat colourFormat[], const Texture::ePixelFormat depthFormat, const Texture::ePixelFormat stencilFormat, const Texture::eMSAA msaa)
         : config(_config)
         {	
-            NSError *error = nil;
+            NSError* error = nil;
 			
 			//COMPUTE PIPELINE
 			
             if (config->computeFunction != NULL)
             {
-				MTLComputePipelineDescriptor *computeDesc = [MTLComputePipelineDescriptor new];
+				MTLComputePipelineDescriptor* computeDesc = [MTLComputePipelineDescriptor new];
 				
 				computeDesc.label = config->name;
 				
@@ -221,7 +221,7 @@ namespace qMetal
 			
             if (config->vertexFunction != NULL)
             {
-				MTLRenderPipelineDescriptor *renderDesc = [MTLRenderPipelineDescriptor new];
+				MTLRenderPipelineDescriptor* renderDesc = [MTLRenderPipelineDescriptor new];
 
 				renderDesc.label = config->name;
 				
@@ -573,7 +573,7 @@ namespace qMetal
 
     private:
     
-      	const Config *config;
+      	const Config* config;
 		
 		id<MTLComputePipelineState> computePipelineState;
 		id<MTLRenderPipelineState> renderPipelineState;

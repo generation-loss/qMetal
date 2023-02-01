@@ -32,19 +32,19 @@ namespace qMetal
 	typedef std::map<const NSString*, Texture* > loadedTextureMap_t;
 	static loadedTextureMap_t sLoadedTextureMap;
 
-	Texture::Texture(id<MTLTexture> _texture, const SamplerState *_samplerState)
+	Texture::Texture(id<MTLTexture> _texture, const SamplerState* _samplerState)
 	: texture(_texture)
 	, config(NULL)
 	, samplerState(_samplerState)
 	{
 	}
 	
-	Texture::Texture(Config *_config, SamplerState *_samplerState)
+	Texture::Texture(Config* _config, SamplerState* _samplerState)
 	: texture(nil)
 	, config(_config)
 	, samplerState(_samplerState)
 	{
-		MTLTextureDescriptor *textureDescriptor = NULL;
+		MTLTextureDescriptor* textureDescriptor = NULL;
 	  
 		switch (config->type) {
 			case eType_2D:
@@ -151,37 +151,37 @@ namespace qMetal
 		return texture;
 	}
 	
-	void Texture::Fill(uint8_t *data)
+	void Texture::Fill(uint8_t* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_R8);
 		Fill((void*)data);
 	}
 	
-	void Texture::Fill(float *data)
+	void Texture::Fill(float* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_R32f);
 		Fill((void*)data);
 	}
 	
-	void Texture::Fill(half *data)
+	void Texture::Fill(half* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_R16f);
 		Fill((void*)data);
 	}
 	
-	void Texture::Fill(qRGBA8 *data)
+	void Texture::Fill(qRGBA8* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_RGBA8);
 		Fill((void*)data);
 	}
 	
-	void Texture::Fill(qRGBA16f *data)
+	void Texture::Fill(qRGBA16f* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_RGBA16f);
 		Fill((void*)data);
 	}
 	
-	void Texture::Fill(qRGBA32f *data)
+	void Texture::Fill(qRGBA32f* data)
 	{
 		qASSERT(config->pixelFormat == ePixelFormat_RGBA32f);
 		Fill((void*)data);
@@ -224,14 +224,14 @@ namespace qMetal
 	const Texture::Config* Texture::GetConfig() const { return config; }
 	const NSString* Texture::GetName() const { return texture.label; }
 
-	Texture* Texture::LoadByName(const NSString *nameWithExtension, const bool CPUReadable, const SamplerState *samplerState)
+	Texture* Texture::LoadByName(const NSString* nameWithExtension, const bool CPUReadable, const SamplerState* samplerState)
 	{
 		if (sLoadedTextureMap.find(nameWithExtension) != sLoadedTextureMap.end())
 		{
 			return sLoadedTextureMap.find(nameWithExtension)->second;
 		}
 		
-		NSError *error = nil;
+		NSError* error = nil;
 		
 		if (sMTKTextureLoader == NULL)
 		{
@@ -248,7 +248,7 @@ namespace qMetal
 		
 		qASSERTM(texture != nil, "Texture::LoadByName: texture is nil %s", [nameWithExtension UTF8String]);
 		
-		Texture *qTexture = new Texture(texture, samplerState);
+		Texture* qTexture = new Texture(texture, samplerState);
 		
 		loadedTextureMap_t::value_type KV(nameWithExtension, qTexture);
 			
@@ -261,7 +261,7 @@ namespace qMetal
 		return qTexture;
 	}
 	
-	void Texture::Fill(void *data)
+	void Texture::Fill(void* data)
 	{
 		MTLRegion region = MTLRegionMake2D(0, 0, config->width, config->height);
 		NSUInteger bytesPerRow = (NSUInteger)(float(config->width) * BytesPerPixel());

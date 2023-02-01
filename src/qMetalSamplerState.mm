@@ -55,7 +55,7 @@ namespace qMetal
 	, wrapX(_wrapX)
 	, wrapY(_wrapY)
 	{
-		MTLSamplerDescriptor *samplerDescriptor = [MTLSamplerDescriptor new];
+		MTLSamplerDescriptor* samplerDescriptor = [MTLSamplerDescriptor new];
 		samplerDescriptor.minFilter = (MTLSamplerMinMagFilter)minFilter;
 		samplerDescriptor.magFilter = (MTLSamplerMinMagFilter)magFilter;
 		samplerDescriptor.mipFilter = (MTLSamplerMipFilter)mipFilter;

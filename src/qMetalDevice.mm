@@ -59,7 +59,7 @@ namespace qMetal
         static id<MTLCommandBuffer>     	sCommandBuffer         			= nil;
         static id<CAMetalDrawable>      	sDrawable              			= nil;
         
-        void Init(Config *_config)
+        void Init(Config* _config)
         {
 			config = _config;
         
@@ -132,7 +132,7 @@ namespace qMetal
             return sDevice;
         }
         
-		id<MTLBlitCommandEncoder> BlitEncoder(NSString *label)
+		id<MTLBlitCommandEncoder> BlitEncoder(NSString* label)
 		{
 			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLBlitCommandEncoder> encoder = [sCommandBuffer blitCommandEncoder];
@@ -140,7 +140,7 @@ namespace qMetal
 			return encoder;
 		}
 		
-		id<MTLComputeCommandEncoder> ComputeEncoder(NSString *label)
+		id<MTLComputeCommandEncoder> ComputeEncoder(NSString* label)
 		{
 			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLComputeCommandEncoder> encoder = [sCommandBuffer computeCommandEncoder];
@@ -148,7 +148,7 @@ namespace qMetal
 			return encoder;
 		}
 		
-		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor *descriptor, NSString *label)
+		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor* descriptor, NSString* label)
 		{
 			qASSERTM(sCommandBuffer != nil, "Device CommandBuffer is nil; did you call BeginOffScreen()/BeginRenderable()?")
 			id<MTLRenderCommandEncoder> encoder = [sCommandBuffer renderCommandEncoderWithDescriptor:descriptor];
@@ -304,7 +304,7 @@ namespace qMetal
 			[encoder setComputePipelineState:sIndirectResetComputePiplineState];
 			for(uint32_t poolIndex = 0; poolIndex < eIndirectCommandBufferPool_Count; ++poolIndex)
 			{
-				if( config->commandBufferPoolConfig[poolIndex].indirectCommandBufferDescriptor == NULL)
+				if( (config->commandBufferPoolConfig[poolIndex].indirectCommandBufferDescriptor == NULL) || (sIndirectCommandBufferPool[poolIndex].nextIndirectRangeOffset == 0) )
 				{
 					continue;
 				}

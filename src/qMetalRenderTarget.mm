@@ -24,7 +24,7 @@ SOFTWARE.
 
 namespace qMetal
 {
-	RenderTarget::RenderTarget(const Config *_config)
+	RenderTarget::RenderTarget(const Config* _config)
 	: config(_config)
 	, mEncoder(nil)
 	{
@@ -46,11 +46,11 @@ namespace qMetal
 				qBREAK("No colour texture or config provided");
 			}
 			
-			const Texture::Config *textureConfig = mColourTexture[i]->GetConfig();
+			const Texture::Config* textureConfig = mColourTexture[i]->GetConfig();
 			
 			mColourTexturePixelFormat[i] = textureConfig == NULL ? Texture::ePixelFormat_BGRA8 : textureConfig->pixelFormat;
 			
-			MTLRenderPassColorAttachmentDescriptor *attachment = renderPassDescriptor.colorAttachments[i];
+			MTLRenderPassColorAttachmentDescriptor* attachment = renderPassDescriptor.colorAttachments[i];
 			attachment.texture = mColourTexture[i]->MTLTexture();
 			attachment.loadAction = (MTLLoadAction)config->clearAction[i];
 			attachment.clearColor = MTLClearColorMake(config->clearColour[i].r, config->clearColour[i].g, config->clearColour[i].b, config->clearColour[i].a);
@@ -101,9 +101,9 @@ namespace qMetal
 				mDepthTexture = new qMetal::Texture(config->depthTextureConfig, config->depthTextureSamplerState);
 			}
 			
-			const Texture::Config *textureConfig = mDepthTexture->GetConfig();
+			const Texture::Config* textureConfig = mDepthTexture->GetConfig();
 			
-			MTLRenderPassDepthAttachmentDescriptor *attachment = renderPassDescriptor.depthAttachment;
+			MTLRenderPassDepthAttachmentDescriptor* attachment = renderPassDescriptor.depthAttachment;
 			attachment.texture = mDepthTexture->MTLTexture();
 			attachment.loadAction = (MTLLoadAction)config->depthClearAction;
 			attachment.clearDepth = config->depthClear;
@@ -153,9 +153,9 @@ namespace qMetal
 				mStencilTexture = new qMetal::Texture(config->stencilTextureConfig, config->stencilTextureSamplerState);
 			}
 			
-			const Texture::Config *textureConfig = mStencilTexture->GetConfig();
+			const Texture::Config* textureConfig = mStencilTexture->GetConfig();
 			
-			MTLRenderPassStencilAttachmentDescriptor *attachment = renderPassDescriptor.stencilAttachment;
+			MTLRenderPassStencilAttachmentDescriptor* attachment = renderPassDescriptor.stencilAttachment;
 			attachment.texture = mStencilTexture->MTLTexture();
 			attachment.loadAction = (MTLLoadAction)config->stencilClearAction;
 			attachment.clearStencil = config->stencilClear;

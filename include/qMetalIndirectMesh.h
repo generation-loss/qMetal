@@ -126,7 +126,7 @@ namespace qMetal
 			{ }
         } Config;
 		
-		IndirectMesh(Config *_config)
+		IndirectMesh(Config* _config)
         : config(_config)
         , ringClearComputePipelineState(nil)
         , rangeInitComputePipelineState(nil)
@@ -170,7 +170,7 @@ namespace qMetal
 			
 			// COMPUTE PIPELINE STATE FOR INDIRECT COMMAND BUFFER CONSTRUCTION
 			
-			NSError *error = nil;
+			NSError* error = nil;
 			computePipelineState = [qMetal::Device::Get() newComputePipelineStateWithFunction:config->function->Get()
 									 													error:&error];
 			if (!computePipelineState)
@@ -224,14 +224,14 @@ namespace qMetal
 				{
 					if (config->indirectIndexStreamIndex != EmptyIndex)
 					{
-						uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
+						uint32_t* indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
 						*indexCount = it->GetConfig()->indexCount;
 						
 						[instanceArgumentEncoder setBuffer:it->GetIndexBuffer() offset:0 atIndex:config->indirectIndexStreamIndex];
 					}
 					if (config->indirectIndexStreamQuadIndex != EmptyIndex)
 					{
-						uint32_t *indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountQuadIndex];
+						uint32_t* indexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountQuadIndex];
 						*indexCount = it->GetConfig()->quadIndexCount;
 						
 						[instanceArgumentEncoder setBuffer:it->GetQuadIndexBuffer() offset:0 atIndex:config->indirectIndexStreamQuadIndex];
@@ -239,7 +239,7 @@ namespace qMetal
 				}
 				else
 				{
-					uint32_t *vertexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
+					uint32_t* vertexCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectVertexIndexCountIndex];
 					*vertexCount = it->GetConfig()->vertexCount;
 				}
 				
@@ -250,7 +250,7 @@ namespace qMetal
 				
 				if (config->indirectTessellationFactorCountIndex != EmptyIndex)
 				{
-					uint32_t *factorCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectTessellationFactorCountIndex];
+					uint32_t* factorCount = (uint32_t*)[instanceArgumentEncoder constantDataAtIndex:config->indirectTessellationFactorCountIndex];
 					*factorCount = it->GetTessellationFactorsCount();
 				}
 				
@@ -268,7 +268,7 @@ namespace qMetal
 		{
 			if (ringClearComputePipelineState != nil)
 			{
-				NSString *debugName = [NSString stringWithFormat:@"%@ Tessellation Ring Clear", config->name];
+				NSString* debugName = [NSString stringWithFormat:@"%@ Tessellation Ring Clear", config->name];
 				[encoder pushDebugGroup:debugName];
 				[encoder setComputePipelineState:ringClearComputePipelineState];
 				[encoder setBuffer:tessellationFactorsRingBuffer offset:0 atIndex:config->tessellationFactorsRingBufferIndex];
@@ -285,7 +285,7 @@ namespace qMetal
 			
 			[encoder memoryBarrierWithScope:MTLBarrierScopeBuffers];
 			
-			NSString *debugName = [NSString stringWithFormat:@"%@ ICB Compute Encode", config->name];
+			NSString* debugName = [NSString stringWithFormat:@"%@ ICB Compute Encode", config->name];
 			[encoder pushDebugGroup:debugName];
 		
 			[encoder setComputePipelineState:computePipelineState];
@@ -379,7 +379,7 @@ namespace qMetal
 			const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material,
 			const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *tessellatedMaterial = NULL)
         {
-			NSString *debugName = [NSString stringWithFormat:@"%@ ICB render encode", config->name];
+			NSString* debugName = [NSString stringWithFormat:@"%@ ICB render encode", config->name];
 			[encoder pushDebugGroup:debugName];
 			if (config->vertexInstanceParamsIndex != EmptyIndex)
 			{

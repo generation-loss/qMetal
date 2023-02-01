@@ -34,8 +34,8 @@ namespace qMetal
     class Mesh
     {
     public:
-		static constexpr uint32_t TessellationStreamLimit = 31;
-		static constexpr uint32_t VertexStreamLimit = 31;
+		static constexpr NSUInteger TessellationStreamLimit = 31;
+		static constexpr NSUInteger VertexStreamLimit = 31;
 		
 		enum ePrimitiveType
 		{
@@ -131,7 +131,7 @@ namespace qMetal
             
         } Config;
 		
-        Mesh(Config *_config);
+        Mesh(Config* _config);
 		
 		template<class _VertexParams, class _FragmentParams, class _ComputeParams, class _InstanceParams>
         void Encode(id<MTLComputeCommandEncoder> encoder, const Material<_VertexParams, _FragmentParams, _ComputeParams, _InstanceParams> *material)

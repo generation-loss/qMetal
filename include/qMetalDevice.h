@@ -63,14 +63,14 @@ namespace qMetal
 			}
 		};
     
-        void Init(Config *config);
+        void Init(Config* config);
         void Destroy();
       
         id<MTLDevice> Get();
 
-		id<MTLBlitCommandEncoder> BlitEncoder(NSString *label);
-		id<MTLComputeCommandEncoder> ComputeEncoder(NSString *label);
-		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor *descriptor, NSString *label);
+		id<MTLBlitCommandEncoder> BlitEncoder(NSString* label);
+		id<MTLComputeCommandEncoder> ComputeEncoder(NSString* label);
+		id<MTLRenderCommandEncoder> RenderEncoder(MTLRenderPassDescriptor* descriptor, NSString* label);
 		
 		void PushDebugGroup(NSString* name);
 		void PopDebugGroup();

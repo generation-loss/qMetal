@@ -58,7 +58,7 @@ namespace qMetal
 		
 		struct Config
 		{
-			Config(NSString *_name)
+			Config(NSString* _name)
 			: name([_name retain])
 			, colorAttachmentCount(eColorAttachment_1)
 			, depthTextureConfig(NULL)
@@ -89,7 +89,7 @@ namespace qMetal
 				}
 			}
 			
-			Config(Config* config, NSString *name)
+			Config(Config* config, NSString* name)
             : name(name)
 			, colorAttachmentCount(config->colorAttachmentCount)
 			, depthTextureConfig(config->depthTextureConfig)
@@ -120,35 +120,35 @@ namespace qMetal
 				}
 			}
 			
-			NSString *name;
+			NSString* name;
 			
 			//number of color attachments
 			eColorAttachment colorAttachmentCount;
 			
 			//colour attachments
-			Texture::Config *colourTextureConfig[eColorAttachment_Count];
-			Texture *colourTexture[eColorAttachment_Count];
-			SamplerState *colourTextureSamplerState[eColorAttachment_Count];
+			Texture::Config* colourTextureConfig[eColorAttachment_Count];
+			Texture* colourTexture[eColorAttachment_Count];
+			SamplerState* colourTextureSamplerState[eColorAttachment_Count];
 			
 			//colour resolve attachments (if colour has MSAA)
-			Texture::Config *colourResolveTextureConfig[eColorAttachment_Count];
-			Texture *colourResolveTexture[eColorAttachment_Count];
-			SamplerState *colourResolveTextureSamplerState[eColorAttachment_Count];
+			Texture::Config* colourResolveTextureConfig[eColorAttachment_Count];
+			Texture* colourResolveTexture[eColorAttachment_Count];
+			SamplerState* colourResolveTextureSamplerState[eColorAttachment_Count];
 			
 			//depth
-			Texture::Config *depthTextureConfig;
-			SamplerState *depthTextureSamplerState;
-			Texture *depthTexture;
+			Texture::Config* depthTextureConfig;
+			SamplerState* depthTextureSamplerState;
+			Texture* depthTexture;
 			
 			//depth resolve texture (if depth has MSAA)
-			Texture::Config *depthResolveTextureConfig;
-			SamplerState *depthResolveTextureSamplerState;
-			Texture *depthResolveTexture;
+			Texture::Config* depthResolveTextureConfig;
+			SamplerState* depthResolveTextureSamplerState;
+			Texture* depthResolveTexture;
 			
 			//stencil
-			Texture::Config *stencilTextureConfig;
-			SamplerState *stencilTextureSamplerState;
-			Texture *stencilTexture;
+			Texture::Config* stencilTextureConfig;
+			SamplerState* stencilTextureSamplerState;
+			Texture* stencilTexture;
 			
 			qRGBA32f clearColour[eColorAttachment_Count];
 			double depthClear;
@@ -162,7 +162,7 @@ namespace qMetal
 			NSUInteger level;
 		};
 		
-		RenderTarget(const Config *config);
+		RenderTarget(const Config* config);
 		
 		id<MTLRenderCommandEncoder> Begin();
 		void End();

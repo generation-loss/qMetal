@@ -79,7 +79,7 @@ namespace qMetal
 			{}
         } Config;
         
-		ComputeTexture(Config *_config, SamplerState *_samplerState = SamplerState::PredefinedState(eSamplerState_LinearLinearNone_ClampClamp))
+		ComputeTexture(Config* _config, SamplerState* _samplerState = SamplerState::PredefinedState(eSamplerState_LinearLinearNone_ClampClamp))
         : Texture((Texture::Config*)_config, _samplerState)
         , config(_config)
         , samplerState(_samplerState)

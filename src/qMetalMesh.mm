@@ -24,7 +24,7 @@ SOFTWARE.
 
 namespace qMetal
 {
-    Mesh::Mesh(Mesh::Config *_config)
+    Mesh::Mesh(Mesh::Config* _config)
 	: config(_config)
 	{
 		qASSERTM(config->quadIndexCount == 0 || config->tessellated, "Can't have quad indices on mesh %s unless we're tessellated", config->name.UTF8String);
