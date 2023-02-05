@@ -128,7 +128,7 @@ namespace qMetal
 			[indirectRenderCommand setVertexBuffer:vertexBuffers[i] offset:0 atIndex:i];
 		}
 		
-		[indirectRenderCommand drawIndexedPrimitives:(MTLPrimitiveType)config->primitiveType indexCount:config->indexCount indexType:((config->indices16[0] != NULL) ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32) indexBuffer:indexBuffer indexBufferOffset:0 instanceCount:1 baseVertex:0 baseInstance:0];
+		[indirectRenderCommand drawIndexedPrimitives:(MTLPrimitiveType)config->primitiveType indexCount:config->indexCount indexType:((config->indices16 != NULL) ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32) indexBuffer:indexBuffer indexBufferOffset:0 instanceCount:1 baseVertex:0 baseInstance:0];
 	}
 	
 	void Mesh::UseResources(id<MTLComputeCommandEncoder> encoder, bool withVertexArgumentBuffer)

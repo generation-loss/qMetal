@@ -43,8 +43,8 @@ namespace qMetal
 		{
 			typedef struct IndirectCommandBufferPoolConfig
 			{
-				uint32_t maxIndirectCommands; //TODO upload max and do out of bounds access if it's out of range
-				uint32_t maxIndirectDrawRanges;
+				NSUInteger maxIndirectCommands; //TODO upload max and do out of bounds access if it's out of range
+				NSUInteger maxIndirectDrawRanges;
 				MTLIndirectCommandBufferDescriptor* indirectCommandBufferDescriptor;
 				
 				IndirectCommandBufferPoolConfig()
