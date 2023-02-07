@@ -40,7 +40,9 @@ namespace qMetal
 	
 	typedef int32_t ParamIndex;
 	
-	const ParamIndex EmptyIndex = -1;
+	static constexpr ParamIndex EmptyIndex = -1;
+	
+	static constexpr NSUInteger ComputeStreamLimit = 31;
 	
 	//RPW TODO this should live on qMetalMesh or somewhere more common
 	enum eTessellationFactorMode
@@ -73,7 +75,9 @@ namespace qMetal
             ParamIndex vertexParamsIndex;
             ParamIndex fragmentTextureIndex;
             ParamIndex fragmentParamsIndex;
+            ParamIndex computeTextureIndex;
             ParamIndex computeParamsIndex;
+            ParamIndex computeStreamsIndex;
             ParamIndex instanceParamsIndex;
             MTLVertexDescriptor* vertexDescriptor;
             BlendState* blendStates[RenderTarget::eColorAttachment_Count];
@@ -85,6 +89,7 @@ namespace qMetal
             const Texture* fragmentTextures[Texture::eUnit_Count];
 			uint32_t vertexSamplers[Texture::eUnit_Count];
 			uint32_t fragmentSamplers[Texture::eUnit_Count];
+			id<MTLBuffer> computeStreams[ComputeStreamLimit];
 			NSUInteger instanceCount;
 			eTessellationIndexBufferType tessellationIndexBufferType;
 			eTessellationFactorMode tessellationFactorMode;
@@ -101,7 +106,9 @@ namespace qMetal
             , vertexParamsIndex(EmptyIndex)
             , fragmentTextureIndex(EmptyIndex)
             , fragmentParamsIndex(EmptyIndex)
+            , computeTextureIndex(EmptyIndex)
             , computeParamsIndex(EmptyIndex)
+            , computeStreamsIndex(EmptyIndex)
             , instanceParamsIndex(EmptyIndex)
             , vertexDescriptor(NULL)
             , depthStencilState(NULL)
@@ -114,12 +121,16 @@ namespace qMetal
 			, forIndirectCommandBuffer(false)
 			, tessellated(false)
             {
-              memset(blendStates, 0, sizeof(blendStates));
-              memset(computeTextures, 0, sizeof(vertexTextures));
-              memset(vertexTextures, 0, sizeof(vertexTextures));
-              memset(fragmentTextures, 0, sizeof(fragmentTextures));
-              memset(vertexSamplers, 0, sizeof(vertexSamplers));
-              memset(fragmentSamplers, 0, sizeof(fragmentSamplers));
+				memset(blendStates, 0, sizeof(blendStates));
+				memset(computeTextures, 0, sizeof(computeTextures));
+				memset(vertexTextures, 0, sizeof(vertexTextures));
+				memset(fragmentTextures, 0, sizeof(fragmentTextures));
+				memset(vertexSamplers, 0, sizeof(vertexSamplers));
+				memset(fragmentSamplers, 0, sizeof(fragmentSamplers));
+				for (int i = 0; i < ComputeStreamLimit; ++i)
+				{
+					computeStreams[i] = nil;
+				}
             }
 			
 			Config(Config* config, NSString* name)
@@ -131,7 +142,9 @@ namespace qMetal
             , vertexParamsIndex(config->vertexParamsIndex)
             , fragmentTextureIndex(config->fragmentTextureIndex)
             , fragmentParamsIndex(config->fragmentParamsIndex)
+            , computeTextureIndex(config->computeTextureIndex)
             , computeParamsIndex(config->computeParamsIndex)
+            , computeStreamsIndex(config->computeStreamsIndex)
             , instanceParamsIndex(config->instanceParamsIndex)
             , vertexDescriptor(config->vertexDescriptor)
             , depthStencilState(config->depthStencilState)
@@ -150,6 +163,10 @@ namespace qMetal
 				memcpy(&fragmentTextures, &config->fragmentTextures, sizeof(fragmentTextures));
 				memcpy(&vertexSamplers, &config->vertexSamplers, sizeof(vertexSamplers));
 				memcpy(&fragmentSamplers, &config->fragmentSamplers, sizeof(fragmentSamplers));
+				for (int i = 0; i < ComputeStreamLimit; ++i)
+				{
+					computeStreams[i] = config->computeStreams[i];
+				}
 			}
         } Config;
 		
@@ -214,6 +231,38 @@ namespace qMetal
 				{
 					computeParamsBuffer[i] = [qMetal::Device::Get() newBufferWithLength:sizeof(_ComputeParams) options:0];
 					computeParamsBuffer[i].label = [NSString stringWithFormat:@"%@ compute params (frame %i)", config->name, i];
+				}
+			}
+				
+			if (config->computeTextureIndex != EmptyIndex)
+			{
+				id <MTLArgumentEncoder> computeTextureEncoder = [config->computeFunction->Get() newArgumentEncoderWithBufferIndex:config->computeTextureIndex];
+				computeTextureBuffer = [qMetal::Device::Get() newBufferWithLength:computeTextureEncoder.encodedLength options:0];
+				computeTextureBuffer.label = [NSString stringWithFormat:@"%@ compute textures", config->name];
+				[computeTextureEncoder setArgumentBuffer:computeTextureBuffer offset:0];
+				
+				for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
+				{
+					if (config->computeTextures[i] != NULL)
+					{
+						config->computeTextures[i]->EncodeArgumentBuffer(computeTextureEncoder, (Texture::eUnit)i);
+					}
+				}
+			}
+				
+			if (config->computeStreamsIndex != EmptyIndex)
+			{
+				id <MTLArgumentEncoder> computeStreamsEncoder = [config->computeFunction->Get() newArgumentEncoderWithBufferIndex:config->computeStreamsIndex];
+				computeStreamsBuffer = [qMetal::Device::Get() newBufferWithLength:computeStreamsEncoder.encodedLength options:0];
+				computeStreamsBuffer.label = [NSString stringWithFormat:@"%@ compute streams", config->name];
+				[computeStreamsEncoder setArgumentBuffer:computeStreamsBuffer offset:0];
+				
+				for (int i = 0; i < (int)ComputeStreamLimit; ++i)
+				{
+					if (config->computeStreams[i] != nil)
+					{
+						[computeStreamsEncoder setBuffer:config->computeStreams[i] offset:0 atIndex:i];
+					}
 				}
 			}
 			
@@ -306,8 +355,7 @@ namespace qMetal
 				
 				if (config->vertexTextureIndex != EmptyIndex)
 				{
-					id <MTLArgumentEncoder> vertexTextureEncoder
-					= [config->vertexFunction->Get() newArgumentEncoderWithBufferIndex:config->vertexTextureIndex];
+					id <MTLArgumentEncoder> vertexTextureEncoder = [config->vertexFunction->Get() newArgumentEncoderWithBufferIndex:config->vertexTextureIndex];
 					vertexTextureBuffer = [qMetal::Device::Get() newBufferWithLength:vertexTextureEncoder.encodedLength options:0];
 					vertexTextureBuffer.label = [NSString stringWithFormat:@"%@ vertex textures", config->name];
 					[vertexTextureEncoder setArgumentBuffer:vertexTextureBuffer offset:0];
@@ -376,20 +424,32 @@ namespace qMetal
 			{
 				[encoder setBuffer:computeParamsBuffer[qMetal::Device::CurrentFrameIndex()] offset:0 atIndex:config->computeParamsIndex];
 			}
-		
-			//TODO textures into an argument buffer
-			for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
-            {
-                if (config->computeTextures[i] != NULL)
-                {
-					config->computeTextures[i]->EncodeCompute(encoder, (Texture::eUnit)i);
+			
+			if (config->computeTextureIndex != EmptyIndex)
+			{
+				[encoder setBuffer:computeTextureBuffer offset:0 atIndex:config->computeTextureIndex];
+			}
+			else
+			{
+				//Legacy non-argument buffer path... TODO UPDATE ALL SHADERS AND REMOVE
+				for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
+				{
+					if (config->computeTextures[i] != NULL)
+					{
+						config->computeTextures[i]->EncodeCompute(encoder, (Texture::eUnit)i);
+					}
 				}
+			}
+			
+			if (config->computeStreamsIndex != EmptyIndex)
+			{
+				[encoder setBuffer:computeStreamsBuffer offset:0 atIndex:config->computeStreamsIndex];
 			}
         }
 		
         void EncodeTextures(id<MTLComputeCommandEncoder> encoder) const
 		{
-			//TODO put this into an argument buffer
+			//Legacy non-argument buffer path... TODO UPDATE ALL SHADERS AND REMOVE
 			for (int i = 0; i < (int)Texture::eUnit_Count; ++i)
             {
                 if (config->computeTextures[i] != NULL)
@@ -583,8 +643,11 @@ namespace qMetal
 		id<MTLBuffer> instanceParamsBuffer[Q_METAL_FRAMES_TO_BUFFER];
 		id<MTLBuffer> fragmentParamsBuffer[Q_METAL_FRAMES_TO_BUFFER];
 		
+		id<MTLBuffer> computeTextureBuffer;
 		id<MTLBuffer> vertexTextureBuffer;
 		id<MTLBuffer> fragmentTextureBuffer;
+		
+		id<MTLBuffer> computeStreamsBuffer;
     };
 }
 
