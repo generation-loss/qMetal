@@ -119,13 +119,17 @@ namespace qMetal
 		[encoder setTexture:texture atIndex:textureIndex];
 	}
 	
-	void Texture::EncodeArgumentBuffer(id<MTLArgumentEncoder> encoder, eUnit textureIndex, eUnit samplerIndex) const
+	void Texture::EncodeArgumentBuffer(id<MTLArgumentEncoder> encoder, eUnit textureIndex) const
 	{
 		qASSERT(texture != nil);
 		[encoder setTexture:texture atIndex:textureIndex];
+	}
+	
+	void Texture::EncodeArgumentBuffer(id<MTLArgumentEncoder> encoder, eUnit textureIndex, eUnit samplerIndex) const
+	{
+		EncodeArgumentBuffer(encoder, textureIndex);
 		samplerState->Encode(encoder, samplerIndex);
 	}
-
 	
 	void Texture::EncodeUsage(id<MTLRenderCommandEncoder> encoder, MTLRenderStages stages) const
 	{
